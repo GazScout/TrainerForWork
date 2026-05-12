@@ -1,0 +1,50 @@
+@model List<EmployeeTrainer.Models.HandbookArticle>
+
+@{
+    ViewData["Title"] = "Справочник";
+}
+
+<div class="container mt-4">
+    <h2>📚 Справочник</h2>
+    
+    <form method="get" class="mb-4">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" 
+                   placeholder="Поиск по названию или тегам..." 
+                   value="@ViewBag.Search">
+            <button type="submit" class="btn btn-primary">🔍 Найти</button>
+            @if (!string.IsNullOrEmpty(ViewBag.Search))
+            {
+                <a href="/Handbook" class="btn btn-outline-secondary">Сбросить</a>
+            }
+        </div>
+    </form>
+
+    @if (Model.Any())
+    {
+        <div class="list-group">
+            @foreach (var article in Model)
+            {
+                <a href="/Handbook/Details/@article.Id" 
+                   class="list-group-item list-group-item-action">
+                    <div class="d-flex justify-content-between">
+                        <h5>@article.Title</h5>
+                        @if (!string.IsNullOrEmpty(article.Tags))
+                        {
+                            <small class="text-muted">
+                                @foreach (var tag in article.Tags.Split(','))
+                                {
+                                    <span class="badge bg-secondary me-1">@tag.Trim()</span>
+                                }
+                            </small>
+                        }
+                    </div>
+                </a>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info">Ничего не найдено</div>
+    }
+</div>

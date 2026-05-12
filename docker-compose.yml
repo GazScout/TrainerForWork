@@ -1,0 +1,18 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: .docker/Dockerfile
+    ports:
+      - "5088:8080"
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__DefaultConnection: Data Source=/data/employeetrainer.db
+    volumes:
+      - trainer-db:/data
+      - trainer-uploads:/app/wwwroot/uploads
+
+volumes:
+  trainer-db:
+  trainer-uploads:

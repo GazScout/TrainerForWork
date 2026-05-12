@@ -1,0 +1,34 @@
+@{
+    ViewData["Title"] = "Создание теста";
+}
+
+<div class="container mt-4">
+    <h2>📝 Создание теста</h2>
+    
+    <form method="post">
+        <div class="mb-3">
+            <label class="form-label">Название теста</label>
+            <input type="text" name="title" class="form-control" required 
+                   placeholder="Например: Основы работы с клиентами" />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Описание (необязательно)</label>
+            <textarea name="description" class="form-control" rows="3" 
+                      placeholder="Опишите, что проверяет этот тест"></textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">⏱️ Ограничение по времени (минут, 0 — без ограничения)</label>
+            <input type="number" name="timeLimitMinutes" class="form-control" 
+                   value="0" min="0" style="max-width: 150px;" />
+        </div>
+       <div class="mb-3 form-check">
+    <input type="checkbox" name="shuffleQuestions" value="true" class="form-check-input" id="shuffleCheck" />
+    <input type="hidden" name="shuffleQuestions" value="false" />
+    <label class="form-check-label" for="shuffleCheck">
+        🔀 Перемешивать вопросы и варианты ответов
+    </label>
+</div>
+        <button type="submit" class="btn btn-success">💾 Создать тест</button>
+        <a href="/Admin/Tests" class="btn btn-outline-secondary">Отмена</a>
+    </form>
+</div>

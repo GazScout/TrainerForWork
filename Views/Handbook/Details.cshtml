@@ -1,0 +1,38 @@
+@model EmployeeTrainer.Models.HandbookArticle
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Handbook">Справочник</a></li>
+            <li class="breadcrumb-item active">@Model.Title</li>
+        </ol>
+    </nav>
+
+    <div class="card">
+        <div class="card-body">
+            <h1 class="card-title">@Model.Title</h1>
+            
+            @if (!string.IsNullOrEmpty(Model.Tags))
+            {
+                <div class="mb-3">
+                    @foreach (var tag in Model.Tags.Split(','))
+                    {
+                        <span class="badge bg-secondary me-1">@tag.Trim()</span>
+                    }
+                </div>
+            }
+            
+            <div class="card-text mt-4" style="white-space: pre-line;">
+                @Model.Content
+            </div>
+        </div>
+    </div>
+    <button type="button" class="btn btn-outline-warning btn-sm mt-3" 
+        onclick="openReport('Article', @Model.Id, '@Model.Title.Replace("'", "\\'")')">
+    🚩 Сообщить об ошибке
+</button>
+</div>

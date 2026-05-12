@@ -1,0 +1,64 @@
+@model List<EmployeeTrainer.Models.Exam>
+
+@{
+    ViewData["Title"] = "Экзамены";
+}
+
+<div class="container mt-4">
+    <h2>📋 Экзамены</h2>
+    <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
+
+    <div class="card mb-4">
+        <div class="card-header">+ Создать экзамен</div>
+        <div class="card-body">
+            <form method="post" action="/Admin/CreateExam">
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <input type="text" name="title" class="form-control" placeholder="Название" required />
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <input type="text" name="description" class="form-control" placeholder="Описание" />
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <input type="number" name="timeLimitMinutes" class="form-control" placeholder="Минут" value="0" />
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <button class="btn btn-success w-100">➕ Создать</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <table class="table table-striped">
+        <thead>
+            <tr><th>ID</th><th>Название</th><th>Заданий</th><th>Статус</th><th>Действия</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var e in Model)
+            {
+                <tr>
+                    <td>@e.Id</td>
+                    <td>@e.Title</td>
+                    <td>@e.Tasks.Count</td>
+                    <td>
+                        <span class="badge @(e.IsPublished ? "bg-success" : "bg-secondary")">
+                            @(e.IsPublished ? "Опубликован" : "Скрыт")
+                        </span>
+                    </td>
+                    <td>
+                        <a href="/Admin/ManageExamTasks?examId=@e.Id" class="btn btn-sm btn-info">📋</a>
+                        <form method="post" action="/Admin/TogglePublishExam/@e.Id" style="display:inline">
+                            <button class="btn btn-sm @(e.IsPublished ? "btn-warning" : "btn-success")">
+                                @(e.IsPublished ? "Скрыть" : "Опубликовать")
+                            </button>
+                        </form>
+                        <form method="post" action="/Admin/DeleteExam/@e.Id" style="display:inline">
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

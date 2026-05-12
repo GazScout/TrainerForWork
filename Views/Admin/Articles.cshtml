@@ -1,0 +1,50 @@
+@model List<EmployeeTrainer.Models.HandbookArticle>
+
+@{
+    ViewData["Title"] = "Управление статьями";
+}
+
+<div class="container mt-4">
+    <h2>📖 Управление статьями</h2>
+    
+    <a href="/Admin/CreateArticle" class="btn btn-success mb-3">+ Добавить статью</a>
+    <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
+<form method="get" class="d-flex mb-3 justify-content-end">
+    <input type="text" name="search" class="form-control me-2" style="max-width: 250px;" 
+           placeholder="Поиск по названию или тегам..." value="@Context.Request.Query["search"]">
+    <button type="submit" class="btn btn-primary">🔍</button>
+    @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
+    {
+        <a href="/Admin/Articles" class="btn btn-outline-secondary ms-1">✕</a>
+    }
+</form>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Теги</th>
+                <th>Дата</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var article in Model)
+            {
+                <tr>
+                    <td>@article.Id</td>
+                    <td>@article.Title</td>
+                    <td>@article.Tags</td>
+                    <td>@article.CreatedAt.ToShortDateString()</td>
+                    <td>
+                        <a href="/Admin/EditArticle/@article.Id" class="btn btn-sm btn-warning">✏️</a>
+                        <form method="post" action="/Admin/DeleteArticle/@article.Id" style="display:inline">
+    <button type="submit" class="btn btn-sm btn-danger" 
+            onclick="return confirm('Удалить статью «@article.Title»?')">🗑️</button>
+</form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

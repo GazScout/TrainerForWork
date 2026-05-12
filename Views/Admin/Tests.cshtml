@@ -1,0 +1,72 @@
+@model List<EmployeeTrainer.Models.Test>
+
+@{
+    ViewData["Title"] = "Управление тестами";
+}
+
+<div class="container mt-4">
+    <h2>📝 Управление тестами</h2>
+    
+    <div class="d-flex justify-content-between mb-3">
+        <div>
+            <a href="/Admin/CreateTest" class="btn btn-success">+ Создать тест</a>
+            <a href="/Admin" class="btn btn-outline-secondary">← Назад</a>
+        </div>
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" 
+                   placeholder="Поиск по названию..." value="@Context.Request.Query["search"]">
+            <button type="submit" class="btn btn-primary">🔍</button>
+            @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
+            {
+                <a href="/Admin/Tests" class="btn btn-outline-secondary ms-1">✕</a>
+            }
+        </form>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">@TempData["Success"]</div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Описание</th>
+                <th>Вопросов</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var test in Model)
+            {
+                <tr>
+                    <td>@test.Id</td>
+                    <td>@test.Title</td>
+                    <td>@test.Description</td>
+                    <td>@test.Questions.Count</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <a href="/Admin/ManageQuestions?testId=@test.Id" class="btn btn-sm btn-info" title="Вопросы">📋</a>
+                            <a href="/Admin/PreviewTest/@test.Id" class="btn btn-sm btn-outline-info" target="_blank" title="Предпросмотр">👁️</a>
+                            <form method="post" action="/Admin/CopyTest/@test.Id" style="display:inline">
+                                <button type="submit" class="btn btn-sm btn-outline-success" title="Копировать">📋</button>
+                            </form>
+                            <form method="post" action="/Admin/DeleteTest/@test.Id" style="display:inline">
+                                <button type="submit" class="btn btn-sm btn-danger" 
+                                        onclick="return confirm('Удалить тест «@test.Title» и все его вопросы?')" title="Удалить">🗑️</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a href="/Admin/TestStats" class="btn btn-outline-info mt-3">📊 Статистика по всем тестам</a>
+</div>

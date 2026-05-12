@@ -1,0 +1,14 @@
+.git
+.gitignore
+**/.DS_Store
+**/bin
+**/obj
+*.db
+*.db-shm
+*.db-wal
+**/*.user
+**/*.suo
+.vs
+.idea
+.dockerignore
+README.md

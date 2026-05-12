@@ -1,0 +1,27 @@
+@model EmployeeTrainer.Models.HandbookArticle
+
+@{
+    ViewData["Title"] = "Редактирование статьи";
+}
+
+<div class="container mt-4">
+    <h2>✏️ Редактирование статьи</h2>
+    
+    <form method="post">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <div class="mb-3">
+            <label class="form-label">Название</label>
+            <input type="text" name="Title" class="form-control" value="@Model.Title" required />
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Содержание</label>
+            <textarea name="Content" class="form-control" rows="10" required>@Model.Content</textarea>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Теги (через запятую)</label>
+            <input type="text" name="Tags" class="form-control" value="@Model.Tags" />
+        </div>
+        <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+        <a href="/Admin/Articles" class="btn btn-outline-secondary">Отмена</a>
+    </form>
+</div>
