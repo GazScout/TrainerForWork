@@ -217,3 +217,11 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/ref/EmployeeTrainer.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.sourcelink.json
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/0obl6xfhvi-{0}-63gwk4scjl-63gwk4scjl.gz
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ClosedXML.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ClosedXML.Parser.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/DocumentFormat.OpenXml.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/DocumentFormat.OpenXml.Framework.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ExcelNumberFormat.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/RBush.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/SixLabors.Fonts.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/System.IO.Packaging.dll

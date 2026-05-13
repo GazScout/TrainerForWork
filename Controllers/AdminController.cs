@@ -6,6 +6,7 @@ using EmployeeTrainer.Services;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.Text.Json;
+using ClosedXML.Excel;
 
 namespace EmployeeTrainer.Controllers;
 
@@ -664,16 +665,6 @@ public class AdminController : Controller
         return RedirectToAction(nameof(ManageExamTasks), new { examId });
     }
     [HttpPost]
-    public async Task<IActionResult> UpdateExamSettings(int examId, int timeLimitMinutes)
-    {
-        var exam = await _context.Exams.FindAsync(examId);
-        if (exam == null) return NotFound();
-        exam.TimeLimitMinutes = timeLimitMinutes;
-        await _context.SaveChangesAsync();
-        TempData["Success"] = "Настройки сохранены";
-        return RedirectToAction(nameof(ManageExamTasks), new { examId });
-    }
-    [HttpPost]
     public async Task<IActionResult> UpdateExamSettings(int examId, int timeLimitMinutes, bool shuffleQuestions)
     {
         var exam = await _context.Exams.FindAsync(examId);
@@ -684,16 +675,24 @@ public class AdminController : Controller
         TempData["Success"] = "Настройки сохранены";
         return RedirectToAction(nameof(ManageExamTasks), new { examId });
     }
-    public async Task<IActionResult> ReviewExams()
-    {
-        var submissions = await _context.ExamSubmissions
-            .Include(s => s.Exam)
-            .Include(s => s.User)
-            .OrderByDescending(s => s.SubmittedAt)
-            .Where(s => s.Score == null)
-            .ToListAsync();
-        return View(submissions);
-    }
+    public async Task<IActionResult> ReviewExams(bool showAll = false)
+{
+    var query = _context.ExamSubmissions
+        .Include(s => s.User)
+        .Include(s => s.Exam)
+            .ThenInclude(e => e.Tasks)
+        .AsQueryable();
+
+    if (!showAll)
+        query = query.Where(s => s.Score == null);
+
+    var submissions = await query
+        .OrderByDescending(s => s.SubmittedAt)
+        .ToListAsync();
+
+    ViewBag.ShowAll = showAll;
+    return View(submissions);
+}
     [HttpPost]
     public async Task<IActionResult> ReviewExamSubmission(int submissionId, int score, string? comment)
     {
@@ -713,4 +712,111 @@ public class AdminController : Controller
         TempData["Success"] = "Оценка выставлена";
         return RedirectToAction(nameof(ReviewExams));
     }
+    // Экспорт результатов экзамена в Excel
+public async Task<IActionResult> ExportExamResults(int examId)
+{
+    var exam = await _context.Exams
+        .Include(e => e.Tasks)
+        .FirstOrDefaultAsync(e => e.Id == examId);
+    
+    if (exam == null) return NotFound();
+
+    var submissions = await _context.ExamSubmissions
+        .Include(s => s.User)
+        .Where(s => s.ExamId == examId)
+        .OrderByDescending(s => s.SubmittedAt)
+        .ToListAsync();
+
+    using var workbook = new ClosedXML.Excel.XLWorkbook();
+    var sheetName = $"Экзамен {exam.Title}"
+    .Replace(":", "")
+    .Replace("\\", "")
+    .Replace("/", "")
+    .Replace("?", "")
+    .Replace("*", "")
+    .Replace("[", "")
+    .Replace("]", "");
+    
+if (sheetName.Length > 31) sheetName = sheetName.Substring(0, 31);
+
+var ws = workbook.Worksheets.Add(sheetName);
+
+    // Заголовок
+    ws.Cell(1, 1).Value = $"Результаты экзамена: {exam.Title}";
+    ws.Cell(1, 1).Style.Font.Bold = true;
+    ws.Cell(1, 1).Style.Font.FontSize = 14;
+    ws.Range(1, 1, 1, 7).Merge();
+
+    ws.Cell(2, 1).Value = $"Дата выгрузки: {DateTime.Now:dd.MM.yyyy HH:mm}";
+    ws.Cell(2, 1).Style.Font.FontSize = 10;
+    ws.Range(2, 1, 2, 7).Merge();
+
+    // Заголовки таблицы
+    var headers = new[] { "№", "Сотрудник", "Логин", "Дата сдачи", "Оценка", "Статус", "Комментарий" };
+    for (int i = 0; i < headers.Length; i++)
+    {
+        ws.Cell(4, i + 1).Value = headers[i];
+        ws.Cell(4, i + 1).Style.Font.Bold = true;
+        ws.Cell(4, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray;
+        ws.Cell(4, i + 1).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+    }
+
+    // Данные
+    int row = 5;
+    foreach (var sub in submissions)
+    {
+        ws.Cell(row, 1).Value = row - 4;
+        ws.Cell(row, 2).Value = sub.User?.FullName ?? "—";
+        ws.Cell(row, 3).Value = sub.User?.Username ?? "—";
+        ws.Cell(row, 4).Value = sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+        ws.Cell(row, 5).Value = sub.Score?.ToString() ?? "—";
+        ws.Cell(row, 6).Value = sub.Score == null ? "На проверке" : "Проверено";
+        ws.Cell(row, 7).Value = sub.AdminComment ?? "";
+
+        // Цвет строки по статусу
+        if (sub.Score == null)
+        {
+            ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightYellow;
+        }
+        else if (sub.Score >= 80)
+        {
+            ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightGreen;
+        }
+        else
+        {
+            ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightSalmon;
+        }
+
+        row++;
+    }
+
+    // Статистика
+    row += 2;
+    ws.Cell(row, 1).Value = "Статистика:";
+    ws.Cell(row, 1).Style.Font.Bold = true;
+    row++;
+    ws.Cell(row, 1).Value = "Всего сдач:";
+    ws.Cell(row, 2).Value = submissions.Count;
+    row++;
+    ws.Cell(row, 1).Value = "Проверено:";
+    ws.Cell(row, 2).Value = submissions.Count(s => s.Score != null);
+    row++;
+    ws.Cell(row, 1).Value = "Средний балл:";
+    ws.Cell(row, 2).Value = submissions.Any(s => s.Score != null) 
+        ? (int)submissions.Where(s => s.Score != null).Average(s => s.Score!.Value) 
+        : "—";
+    row++;
+    ws.Cell(row, 1).Value = "Сдано успешно (≥80):";
+    ws.Cell(row, 2).Value = submissions.Count(s => s.Score >= 80);
+
+    // Автоширина
+    ws.Columns().AdjustToContents();
+
+    using var stream = new MemoryStream();
+    workbook.SaveAs(stream);
+    stream.Position = 0;
+
+    var fileName = $"Экзамен_{exam.Title}_{DateTime.Now:yyyyMMdd}.xlsx";
+    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+}
 }

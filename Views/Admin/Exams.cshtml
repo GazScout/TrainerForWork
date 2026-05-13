@@ -7,7 +7,6 @@
 <div class="container mt-4">
     <h2>📋 Экзамены</h2>
     <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
-
     <div class="card mb-4">
         <div class="card-header">+ Создать экзамен</div>
         <div class="card-body">
@@ -29,7 +28,7 @@
             </form>
         </div>
     </div>
-
+    
     <table class="table table-striped">
         <thead>
             <tr><th>ID</th><th>Название</th><th>Заданий</th><th>Статус</th><th>Действия</th></tr>
@@ -56,6 +55,7 @@
                         <form method="post" action="/Admin/DeleteExam/@e.Id" style="display:inline">
                             <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">🗑️</button>
                         </form>
+                        <a href="/Admin/ExportExamResults?examId=@e.Id" class="btn btn-sm btn-outline-success">📥 Excel</a>
                     </td>
                 </tr>
             }
