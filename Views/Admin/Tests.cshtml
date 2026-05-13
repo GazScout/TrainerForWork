@@ -51,18 +51,19 @@
                     <td>@test.Description</td>
                     <td>@test.Questions.Count</td>
                     <td>
-                        <div class="d-flex gap-1">
-                            <a href="/Admin/ManageQuestions?testId=@test.Id" class="btn btn-sm btn-info" title="Вопросы">📋</a>
-                            <a href="/Admin/PreviewTest/@test.Id" class="btn btn-sm btn-outline-info" target="_blank" title="Предпросмотр">👁️</a>
-                            <form method="post" action="/Admin/CopyTest/@test.Id" style="display:inline">
-                                <button type="submit" class="btn btn-sm btn-outline-success" title="Копировать">📋</button>
-                            </form>
-                            <form method="post" action="/Admin/DeleteTest/@test.Id" style="display:inline">
-                                <button type="submit" class="btn btn-sm btn-danger" 
-                                        onclick="return confirm('Удалить тест «@test.Title» и все его вопросы?')" title="Удалить">🗑️</button>
-                            </form>
-                        </div>
-                    </td>
+    <div class="d-flex gap-1">
+        <a href="/Admin/ManageQuestions?testId=@test.Id" class="btn btn-sm btn-info" title="Управление вопросами">📋</a>
+        <a href="/Admin/PreviewTest/@test.Id" class="btn btn-sm btn-outline-info" target="_blank" title="Предпросмотр теста">👁️</a>
+        <form method="post" action="/Admin/CopyTest/@test.Id" style="display:inline">
+            <button type="submit" class="btn btn-sm btn-outline-success" title="Копировать тест">📄</button>
+        </form>
+        <form method="post" action="/Admin/DeleteTest/@test.Id" style="display:inline">
+            <button type="submit" class="btn btn-sm btn-danger" 
+                    onclick="return confirm('Удалить тест «@test.Title» и все его вопросы?')" 
+                    title="Удалить тест">🗑️</button>
+        </form>
+    </div>
+</td>
                 </tr>
             }
         </tbody>

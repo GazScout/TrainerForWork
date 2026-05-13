@@ -20,14 +20,24 @@ public class ExamController : Controller
 
     // Список доступных экзаменов
     public async Task<IActionResult> Index()
-    {
-        var exams = await _context.Exams
-            .Where(e => e.IsPublished)
-            .Include(e => e.Tasks)
-            .OrderByDescending(e => e.CreatedAt)
-            .ToListAsync();
-        return View(exams);
-    }
+{
+    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+    
+    var exams = await _context.Exams
+        .Where(e => e.IsPublished)
+        .Include(e => e.Tasks)
+        .OrderByDescending(e => e.CreatedAt)
+        .ToListAsync();
+
+    var completedExams = await _context.ExamSubmissions
+        .Where(s => s.UserId == userId)
+        .Select(s => s.ExamId)
+        .Distinct()
+        .ToListAsync();
+
+    ViewBag.CompletedExams = completedExams;
+    return View(exams);
+}
 
     // Прохождение экзамена
     public async Task<IActionResult> Take(int id)

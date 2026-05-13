@@ -12,10 +12,17 @@
         <div class="row mt-3">
             @foreach (var exam in Model)
             {
+                var isCompleted = ViewBag.CompletedExams != null && ((List<int>)ViewBag.CompletedExams).Contains(exam.Id);
                 <div class="col-md-6 mb-3">
-                    <div class="card h-100">
+                    <div class="card h-100 @(isCompleted ? "border-success" : "")">
                         <div class="card-body">
-                            <h5>@exam.Title</h5>
+                            <div class="d-flex justify-content-between">
+                                <h5>@exam.Title</h5>
+                                @if (isCompleted)
+                                {
+                                    <span class="badge bg-success">✅ Сдан</span>
+                                }
+                            </div>
                             @if (!string.IsNullOrEmpty(exam.Description))
                             {
                                 <p class="text-muted">@exam.Description</p>
@@ -29,7 +36,9 @@
                             </p>
                         </div>
                         <div class="card-footer bg-transparent border-0">
-                            <a href="/Exam/Take/@exam.Id" class="btn btn-primary">Пройти экзамен</a>
+                            <a href="/Exam/Take/@exam.Id" class="btn btn-primary">
+                                @(isCompleted ? "🔄 Пересдать" : "Пройти экзамен")
+                            </a>
                         </div>
                     </div>
                 </div>

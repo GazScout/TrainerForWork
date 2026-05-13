@@ -20,6 +20,7 @@
                     <th>Объект</th>
                     <th>Сообщение</th>
                     <th>Статус</th>
+                    <th>В работе</th>
                     <th>Дата</th>
                     <th>Действия</th>
                 </tr>
@@ -38,6 +39,9 @@
                                 @(r.Status == ReportStatus.New ? "Новый" : r.Status == ReportStatus.InProgress ? "В работе" : "Решён")
                             </span>
                         </td>
+                        <td>
+                            @(r.ResolvedBy?.FullName ?? r.ResolvedBy?.Username ?? "—")
+                        </td>
                         <td>@r.CreatedAt.ToLocalTime().ToString("dd.MM HH:mm")</td>
                         <td>
                             <div class="d-flex gap-1">
@@ -52,21 +56,26 @@
                                     var previewLink = r.EntityType switch
                                     {
                                         "Test" => $"/Admin/PreviewTest/{r.EntityId}",
+                                        "Article" => $"/Handbook/Details/{r.EntityId}",
                                         _ => null
                                     };
                                 }
-                                <a href="@editLink" class="btn btn-sm btn-primary">✏️</a>
+                                
+                                <a href="@editLink" class="btn btn-sm btn-primary" title="Редактировать">✏️</a>
+                                
                                 @if (previewLink != null)
                                 {
-                                    <a href="@previewLink" class="btn btn-sm btn-outline-info" target="_blank">👁️</a>
+                                    <a href="@previewLink" class="btn btn-sm btn-outline-info" target="_blank" title="Предпросмотр">👁️</a>
                                 }
+                                
                                 @if (r.Status != ReportStatus.Resolved)
                                 {
                                     <form method="post" action="/Admin/UpdateReportStatus" style="display:inline">
                                         <input type="hidden" name="reportId" value="@r.Id" />
                                         <input type="hidden" name="status" value="@(r.Status == ReportStatus.New ? "InProgress" : "Resolved")" />
-                                        <button class="btn btn-sm @(r.Status == ReportStatus.New ? "btn-warning" : "btn-success")">
-                                            @(r.Status == ReportStatus.New ? "🔧 В работу" : "✅ Решить")
+                                        <button class="btn btn-sm @(r.Status == ReportStatus.New ? "btn-warning" : "btn-success")"
+                                                title="@(r.Status == ReportStatus.New ? "Взять в работу" : "Отметить решённым")">
+                                            @(r.Status == ReportStatus.New ? "🔧" : "✅")
                                         </button>
                                     </form>
                                 }

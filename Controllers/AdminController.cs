@@ -433,12 +433,43 @@ public class AdminController : Controller
         return View(results);
     }
 
-    public async Task<IActionResult> AuditLog()
-    {
-        var logs = await _context.AuditLogs.Include(l => l.User)
-            .OrderByDescending(l => l.Timestamp).Take(100).ToListAsync();
-        return View(logs);
-    }
+   public async Task<IActionResult> AuditLog(string? logAction, string? entityType, string? search, int page = 1)
+{
+    var query = _context.AuditLogs
+        .Include(l => l.User)
+        .AsQueryable();
+
+    if (!string.IsNullOrWhiteSpace(logAction))
+        query = query.Where(l => l.Action == logAction);
+
+    if (!string.IsNullOrWhiteSpace(entityType))
+        query = query.Where(l => l.EntityType == entityType);
+
+    if (!string.IsNullOrWhiteSpace(search))
+        query = query.Where(l => l.Details != null && l.Details.Contains(search));
+
+    var totalItems = await query.CountAsync();
+    var pageSize = 20;
+    var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+    
+    if (page < 1) page = 1;
+    if (page > totalPages && totalPages > 0) page = totalPages;
+
+    var logs = await query
+        .OrderByDescending(l => l.Timestamp)
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+    ViewBag.LogAction = logAction;
+    ViewBag.EntityType = entityType;
+    ViewBag.Search = search;
+    ViewBag.CurrentPage = page;
+    ViewBag.TotalPages = totalPages;
+    ViewBag.TotalItems = totalItems;
+
+    return View(logs);
+}
 
     public async Task<IActionResult> Tasks(int? groupId, string? search)
     {
@@ -563,13 +594,14 @@ public class AdminController : Controller
     // ============ РЕПОРТЫ ============
 
     public async Task<IActionResult> Reports()
-    {
-        var reports = await _context.Reports
-            .Include(r => r.User)
-            .OrderByDescending(r => r.CreatedAt)
-            .ToListAsync();
-        return View(reports);
-    }
+{
+    var reports = await _context.Reports
+        .Include(r => r.User)
+        .Include(r => r.ResolvedBy)
+        .OrderByDescending(r => r.CreatedAt)
+        .ToListAsync();
+    return View(reports);
+}
 
     [HttpPost]
     public async Task<IActionResult> UpdateReportStatus(int reportId, ReportStatus status)
@@ -664,17 +696,21 @@ public class AdminController : Controller
         if (task != null) { _context.ExamTasks.Remove(task); await _context.SaveChangesAsync(); }
         return RedirectToAction(nameof(ManageExamTasks), new { examId });
     }
-    [HttpPost]
-    public async Task<IActionResult> UpdateExamSettings(int examId, int timeLimitMinutes, bool shuffleQuestions)
-    {
-        var exam = await _context.Exams.FindAsync(examId);
-        if (exam == null) return NotFound();
-        exam.TimeLimitMinutes = timeLimitMinutes;
-        exam.ShuffleQuestions = shuffleQuestions;
-        await _context.SaveChangesAsync();
-        TempData["Success"] = "Настройки сохранены";
-        return RedirectToAction(nameof(ManageExamTasks), new { examId });
-    }
+   [HttpPost]
+public async Task<IActionResult> UpdateExamSettings(int examId, string title, string description, int timeLimitMinutes, bool shuffleQuestions)
+{
+    var exam = await _context.Exams.FindAsync(examId);
+    if (exam == null) return NotFound();
+    
+    exam.Title = title;
+    exam.Description = description;
+    exam.TimeLimitMinutes = Math.Min(timeLimitMinutes, 180);
+    exam.ShuffleQuestions = shuffleQuestions;
+    
+    await _context.SaveChangesAsync();
+    TempData["Success"] = "Настройки сохранены";
+    return RedirectToAction(nameof(ManageExamTasks), new { examId });
+}
     public async Task<IActionResult> ReviewExams(bool showAll = false)
 {
     var query = _context.ExamSubmissions
@@ -694,25 +730,25 @@ public class AdminController : Controller
     return View(submissions);
 }
     [HttpPost]
-    public async Task<IActionResult> ReviewExamSubmission(int submissionId, int score, string? comment)
-    {
-        var submission = await _context.ExamSubmissions.FindAsync(submissionId);
-        if (submission == null) return NotFound();
+public async Task<IActionResult> ReviewExamSubmission(int submissionId, int score, string? comment)
+{
+    var submission = await _context.ExamSubmissions.FindAsync(submissionId);
+    if (submission == null) return NotFound();
 
-        var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+    var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
 
-        submission.Score = score;
-        submission.AdminComment = comment;
-        submission.ReviewedAt = DateTime.UtcNow;
-        submission.ReviewedByUserId = adminId;
+    // Ограничение 0-100
+    submission.Score = Math.Clamp(score, 0, 100);
+    submission.AdminComment = comment;
+    submission.ReviewedAt = DateTime.UtcNow;
+    submission.ReviewedByUserId = adminId;
 
-        await _context.SaveChangesAsync();
-        await LogAudit("Update", "ExamSubmission", submissionId, $"Оценка: {score}");
+    await _context.SaveChangesAsync();
+    await LogAudit("Update", "ExamSubmission", submissionId, $"Оценка: {submission.Score}");
 
-        TempData["Success"] = "Оценка выставлена";
-        return RedirectToAction(nameof(ReviewExams));
-    }
-    // Экспорт результатов экзамена в Excel
+    TempData["Success"] = "Оценка выставлена";
+    return RedirectToAction(nameof(ReviewExams));
+}
 public async Task<IActionResult> ExportExamResults(int examId)
 {
     var exam = await _context.Exams

@@ -14,18 +14,48 @@ public class HandbookController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index(string? search)
-    {
-        var articles = string.IsNullOrWhiteSpace(search)
-            ? await _context.HandbookArticles.ToListAsync()
-            : await _context.HandbookArticles
-                .Where(a => a.Title.Contains(search) || 
-                           (a.Tags != null && a.Tags.Contains(search)))
-                .ToListAsync();
+    public async Task<IActionResult> Index(string? search, string? tags)
+{
+    var articles = _context.HandbookArticles.AsQueryable();
 
-        ViewBag.Search = search;
-        return View(articles);
+    // Поиск по названию
+    if (!string.IsNullOrWhiteSpace(search))
+    {
+        var term = search.Trim();
+        articles = articles.Where(a => a.Title.Contains(term) || 
+                                       (a.Tags != null && a.Tags.Contains(term)));
     }
+
+    // Фильтр по тегам
+    if (!string.IsNullOrWhiteSpace(tags))
+    {
+        var tagList = tags.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                          .Select(t => t.Trim())
+                          .ToList();
+        foreach (var tag in tagList)
+        {
+            articles = articles.Where(a => a.Tags != null && a.Tags.Contains(tag));
+        }
+    }
+
+    // Собираем все уникальные теги
+    var allTags = await _context.HandbookArticles
+        .Where(a => a.Tags != null)
+        .Select(a => a.Tags)
+        .ToListAsync();
+
+    var uniqueTags = allTags
+        .Where(t => !string.IsNullOrEmpty(t))
+        .SelectMany(t => t!.Split(',', StringSplitOptions.RemoveEmptyEntries))
+        .Select(t => t.Trim())
+        .Distinct()
+        .OrderBy(t => t)
+        .ToList();
+
+    ViewBag.Search = search;
+    ViewBag.Tags = uniqueTags;
+    return View(await articles.OrderByDescending(a => a.CreatedAt).ToListAsync());
+}
 
     public async Task<IActionResult> Details(int id)
     {

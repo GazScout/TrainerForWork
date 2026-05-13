@@ -21,12 +21,11 @@
     <p class="text-muted">@exam?.Description</p>
 
     <div class="alert alert-warning">
-        ⚠️ Это экзамен. Ответы проверяются администратором вручную.
+        ⚠️ Это экзамен. Не покидайте страницу до завершения — незавершённый экзамен будет отправлен автоматически.
     </div>
 
     <form method="post" action="/Exam/Submit" id="examForm">
         <input type="hidden" name="examId" value="@exam?.Id" />
-        <input type="hidden" name="timeSpentSeconds" id="timeSpent" value="0" />
 
         @foreach (var task in Model)
         {
@@ -76,22 +75,101 @@
             </div>
         }
 
-        <button type="submit" class="btn btn-primary btn-lg">📤 Отправить на проверку</button>
+        <button type="button" class="btn btn-primary btn-lg" onclick="confirmSubmit()">📤 Отправить на проверку</button>
     </form>
 </div>
 
+<!-- Модальное окно подтверждения -->
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>📤 Отправить экзамен?</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите завершить экзамен и отправить его на проверку?</p>
+                <p class="text-muted">После отправки изменить ответы будет нельзя.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                <button type="button" class="btn btn-primary" onclick="submitExam()">✅ Да, отправить</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Модальное окно начала экзамена -->
+<div class="modal fade" id="startModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5>📋 Начать экзамен?</h5>
+            </div>
+            <div class="modal-body">
+                <p><strong>@exam?.Title</strong></p>
+                <p>Заданий: @Model.Count</p>
+                @if (timeLimit > 0)
+                {
+                    <p>⏱️ Ограничение по времени: @timeLimit мин</p>
+                }
+                <p class="text-danger">⚠️ Не покидайте страницу во время экзамена!</p>
+            </div>
+            <div class="modal-footer">
+                <a href="/Exam" class="btn btn-secondary">↩ Вернуться к списку</a>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="startExam()">✅ Начать экзамен</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    @if (timeLimit > 0)
-    {
-        <script>
-            var limit = @timeLimit * 60;
-            var elapsed = 0;
-            setInterval(function() {
-                elapsed++;
-                var rem = limit - elapsed;
-                if (rem <= 0) { alert('Время вышло!'); document.getElementById('examForm').submit(); }
-                else { var m = Math.floor(rem/60); var s = rem%60; document.getElementById('timer').textContent = m+':'+(s<10?'0':'')+s; }
-            }, 1000);
-        </script>
-    }
+    <script>
+        var examStarted = false;
+        var timeLimit = @timeLimit * 60;
+        var elapsed = 0;
+        var timerInterval;
+
+        // Показать модалку начала при загрузке
+        window.addEventListener('DOMContentLoaded', function() {
+            new bootstrap.Modal(document.getElementById('startModal')).show();
+        });
+
+        function startExam() {
+            examStarted = true;
+            if (timeLimit > 0) {
+                timerInterval = setInterval(function() {
+                    elapsed++;
+                    var rem = timeLimit - elapsed;
+                    if (rem <= 0) {
+                        clearInterval(timerInterval);
+                        alert('Время вышло! Экзамен отправлен.');
+                        document.getElementById('examForm').submit();
+                    } else {
+                        var m = Math.floor(rem / 60);
+                        var s = rem % 60;
+                        document.getElementById('timer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
+                    }
+                }, 1000);
+            }
+        }
+
+        function confirmSubmit() {
+            if (!examStarted) return;
+            new bootstrap.Modal(document.getElementById('confirmModal')).show();
+        }
+
+        function submitExam() {
+            document.getElementById('examForm').submit();
+        }
+
+        // Автоотправка при уходе со страницы
+        window.addEventListener('beforeunload', function(e) {
+            if (examStarted) {
+                // Отправляем форму через fetch при уходе
+                var fd = new FormData(document.getElementById('examForm'));
+                navigator.sendBeacon('/Exam/Submit', fd);
+            }
+        });
+    </script>
 }

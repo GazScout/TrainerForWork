@@ -19,10 +19,11 @@
 
 <div class="container mt-4">
     <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/Admin/Exams">Экзамены</a></li>
-            <li class="breadcrumb-item active">@Model.Title</li>
-        </ol>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/Admin/Exams" onclick="return confirmExit()">Экзамены</a></li>
+        <li class="breadcrumb-item active">@Model.Title</li>
+    </ol>
+</nav>
     </nav>
 
     <h2>📋 @Model.Title</h2>
@@ -38,34 +39,39 @@
     }
 
     <!-- Настройки экзамена -->
-    <div class="card mb-4">
-        <div class="card-header">⚙️ Настройки экзамена</div>
-        <div class="card-body">
-            <form method="post" action="/Admin/UpdateExamSettings">
-                <input type="hidden" name="examId" value="@Model.Id" />
-                <div class="row">
-                    <div class="col-md-2 mb-2">
-    <label class="form-label">⏱️ Время (мин)</label>
-    <input type="number" name="timeLimitMinutes" class="form-control" 
-           value="@Model.TimeLimitMinutes" min="0" />
-</div>
-<div class="col-md-3 mb-2 d-flex align-items-end">
-    <div class="form-check">
-        <input type="hidden" name="shuffleQuestions" value="false" />
-        <input type="checkbox" name="shuffleQuestions" value="true" 
-               class="form-check-input" id="shuffleCheck"
-               @(Model.ShuffleQuestions ? "checked" : "") />
-        <label class="form-check-label" for="shuffleCheck">🔀 Перемешивать задания</label>
-    </div>
-</div>
-<div class="col-md-3 mb-2 d-flex align-items-end">
-    <button type="submit" class="btn btn-primary">💾 Сохранить</button>
-</div>
+<div class="card mb-4">
+    <div class="card-header">⚙️ Настройки экзамена</div>
+    <div class="card-body">
+        <form method="post" action="/Admin/UpdateExamSettings">
+            <input type="hidden" name="examId" value="@Model.Id" />
+            <div class="row">
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">Название</label>
+                    <input type="text" name="title" class="form-control" value="@Model.Title" />
                 </div>
-            </form>
-        </div>
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">Описание</label>
+                    <input type="text" name="description" class="form-control" value="@Model.Description" />
+                </div>
+                <div class="col-md-2 mb-2">
+                    <label class="form-label">⏱️ Время (мин)</label>
+                    <input type="number" name="timeLimitMinutes" class="form-control" 
+                           value="@Model.TimeLimitMinutes" min="0" max="180" />
+                </div>
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input type="hidden" name="shuffleQuestions" value="false" />
+                        <input type="checkbox" name="shuffleQuestions" value="true" 
+                               class="form-check-input" id="shuffleCheck"
+                               @(Model.ShuffleQuestions ? "checked" : "") />
+                        <label class="form-check-label" for="shuffleCheck">🔀 Перемешивать</label>
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">💾 Сохранить настройки</button>
+        </form>
     </div>
-
+</div>
     <!-- Добавление задания -->
     <div class="card mb-4">
         <div class="card-header">+ Добавить задание</div>
@@ -194,7 +200,19 @@
 @section Scripts {
     <script>
         var selectedType = null;
+var formChanged = false;
 
+// Отслеживаем изменения в форме добавления задания
+document.getElementById('addTaskForm').addEventListener('input', function() {
+    formChanged = true;
+});
+
+function confirmExit() {
+    if (formChanged) {
+        return confirm('У вас есть несохранённые изменения. Уйти?');
+    }
+    return true;
+}
         function selectType(type, el) {
             document.querySelectorAll('.card-task-type').forEach(c => c.classList.remove('selected'));
             el.classList.add('selected');

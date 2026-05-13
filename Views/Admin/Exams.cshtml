@@ -7,6 +7,7 @@
 <div class="container mt-4">
     <h2>📋 Экзамены</h2>
     <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
+
     <div class="card mb-4">
         <div class="card-header">+ Создать экзамен</div>
         <div class="card-body">
@@ -19,7 +20,7 @@
                         <input type="text" name="description" class="form-control" placeholder="Описание" />
                     </div>
                     <div class="col-md-2 mb-2">
-                        <input type="number" name="timeLimitMinutes" class="form-control" placeholder="Минут" value="0" />
+                        <input type="number" name="timeLimitMinutes" class="form-control" placeholder="Минут" value="0" min="0" max="180" />
                     </div>
                     <div class="col-md-2 mb-2">
                         <button class="btn btn-success w-100">➕ Создать</button>
@@ -46,16 +47,30 @@
                         </span>
                     </td>
                     <td>
-                        <a href="/Admin/ManageExamTasks?examId=@e.Id" class="btn btn-sm btn-info">📋</a>
-                        <form method="post" action="/Admin/TogglePublishExam/@e.Id" style="display:inline">
-                            <button class="btn btn-sm @(e.IsPublished ? "btn-warning" : "btn-success")">
-                                @(e.IsPublished ? "Скрыть" : "Опубликовать")
-                            </button>
-                        </form>
-                        <form method="post" action="/Admin/DeleteExam/@e.Id" style="display:inline">
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">🗑️</button>
-                        </form>
-                        <a href="/Admin/ExportExamResults?examId=@e.Id" class="btn btn-sm btn-outline-success">📥 Excel</a>
+                        <div class="d-flex gap-1">
+                            <a href="/Admin/ManageExamTasks?examId=@e.Id" class="btn btn-sm btn-info" title="Управление заданиями">✏️</a>
+                            <a href="/Admin/ExportExamResults?examId=@e.Id" class="btn btn-sm btn-outline-success" title="Скачать Excel">📥</a>
+                            
+                            @if (e.Tasks.Any())
+                            {
+                                <form method="post" action="/Admin/TogglePublishExam/@e.Id" style="display:inline">
+                                    <button class="btn btn-sm @(e.IsPublished ? "btn-warning" : "btn-success")"
+                                            title="@(e.IsPublished ? "Скрыть экзамен" : "Опубликовать экзамен")">
+                                        @(e.IsPublished ? "🔒" : "📢")
+                                    </button>
+                                </form>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="Добавьте хотя бы одно задание">
+                                    📢
+                                </button>
+                            }
+                            
+                            <form method="post" action="/Admin/DeleteExam/@e.Id" style="display:inline">
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить экзамен?')" title="Удалить экзамен">🗑️</button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             }
