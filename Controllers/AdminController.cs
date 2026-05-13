@@ -28,7 +28,44 @@ public class AdminController : Controller
         await _context.SaveChangesAsync();
     }
 
-    public IActionResult Index() => View();
+    public async Task<IActionResult> Index()
+{
+    // Общая статистика
+    ViewBag.TotalUsers = await _context.Users.CountAsync();
+    ViewBag.ActiveUsers = await _context.Users.CountAsync(u => u.IsActive);
+    ViewBag.TotalTests = await _context.Tests.CountAsync();
+    ViewBag.TotalQuestions = await _context.TestQuestions.CountAsync();
+    ViewBag.TotalExams = await _context.Exams.CountAsync();
+    ViewBag.TotalTasks = await _context.SimulatorTasks.CountAsync();
+    ViewBag.TotalArticles = await _context.HandbookArticles.CountAsync();
+    ViewBag.PendingReports = await _context.Reports.CountAsync(r => r.Status == ReportStatus.New);
+    ViewBag.PendingExams = await _context.ExamSubmissions.CountAsync(s => s.Score == null);
+    ViewBag.PendingTasks = await _context.TaskSubmissions.CountAsync(s => s.Score == null);
+    ViewBag.RecentResults = await _context.TestResults
+        .Include(r => r.User)
+        .Include(r => r.Test)
+        .OrderByDescending(r => r.CompletedAt)
+        .Take(5)
+        .ToListAsync();
+
+    ViewBag.AvgScore = await _context.TestResults.AnyAsync()
+        ? (int)await _context.TestResults.AverageAsync(r => r.Percentage)
+        : 0;
+
+    ViewBag.TopUsers = await _context.TestResults
+        .Include(r => r.User)
+        .GroupBy(r => r.UserId)
+        .Select(g => new {
+            User = g.First().User,
+            AvgScore = (int)g.Average(r => r.Percentage),
+            TestsPassed = g.Count()
+        })
+        .OrderByDescending(x => x.AvgScore)
+        .Take(5)
+        .ToListAsync();
+
+    return View();
+}
 
     public async Task<IActionResult> Articles(string? search)
     {

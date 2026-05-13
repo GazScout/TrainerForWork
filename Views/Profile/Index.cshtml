@@ -37,7 +37,25 @@
             </div>
         </div>
     </div>
-
+<!-- Общий прогресс -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between mb-2">
+            <strong>📊 Общий прогресс обучения</strong>
+            <span>@ViewBag.OverallProgress%</span>
+        </div>
+        <div class="progress" style="height: 25px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated 
+                        @(ViewBag.OverallProgress >= 80 ? "bg-success" : ViewBag.OverallProgress >= 40 ? "bg-warning" : "bg-danger")" 
+                 style="width: @ViewBag.OverallProgress%;">
+                @ViewBag.OverallProgress%
+            </div>
+        </div>
+        <small class="text-muted mt-1">
+            Пройдено материалов: @ViewBag.CompletedTests тестов, @ViewBag.CompletedExams экзаменов, @ViewBag.CompletedTasks заданий
+        </small>
+    </div>
+</div>
     <!-- Статистика -->
     <div class="row mb-4">
         <div class="col-md-3">

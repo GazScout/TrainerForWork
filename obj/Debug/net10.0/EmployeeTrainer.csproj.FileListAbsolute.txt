@@ -139,7 +139,6 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/scopedcss/bundle/EmployeeTrainer.styles.css
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/scopedcss/projectbundle/EmployeeTrainer.bundle.scp.css
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/ymeoo3w8h2-{0}-b9sayid5wm-b9sayid5wm.gz
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/0obl6xfhvi-{0}-2nm5w9ebsk-2nm5w9ebsk.gz
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/tnxerv01m9-{0}-61n19gt1b8-61n19gt1b8.gz
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/xgzcvo6nt4-{0}-b88vxczj5f-b88vxczj5f.gz
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/88rvn45klk-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
@@ -217,3 +216,4 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.genruntimeconfig.cache
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/ref/EmployeeTrainer.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.sourcelink.json
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/0obl6xfhvi-{0}-63gwk4scjl-63gwk4scjl.gz
