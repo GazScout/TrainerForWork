@@ -819,4 +819,79 @@ var ws = workbook.Worksheets.Add(sheetName);
     var fileName = $"Экзамен_{exam.Title}_{DateTime.Now:yyyyMMdd}.xlsx";
     return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
 }
+// Экспорт всех результатов экзаменов в Excel
+public async Task<IActionResult> ExportAllExamResults()
+{
+    var submissions = await _context.ExamSubmissions
+        .Include(s => s.Exam)
+        .Include(s => s.User)
+        .OrderBy(s => s.Exam!.Title)
+        .ThenByDescending(s => s.SubmittedAt)
+        .ToListAsync();
+
+    using var workbook = new ClosedXML.Excel.XLWorkbook();
+    var ws = workbook.Worksheets.Add("Все экзамены");
+
+    // Заголовок
+    ws.Cell(1, 1).Value = "Результаты всех экзаменов";
+    ws.Cell(1, 1).Style.Font.Bold = true;
+    ws.Cell(1, 1).Style.Font.FontSize = 14;
+    ws.Range(1, 1, 1, 8).Merge();
+
+    ws.Cell(2, 1).Value = $"Дата выгрузки: {DateTime.Now:dd.MM.yyyy HH:mm}";
+    ws.Range(2, 1, 2, 8).Merge();
+
+    // Заголовки таблицы
+    var headers = new[] { "№", "Экзамен", "Сотрудник", "Логин", "Дата сдачи", "Оценка", "Статус", "Комментарий" };
+    for (int i = 0; i < headers.Length; i++)
+    {
+        ws.Cell(4, i + 1).Value = headers[i];
+        ws.Cell(4, i + 1).Style.Font.Bold = true;
+        ws.Cell(4, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray;
+    }
+
+    // Данные
+    int row = 5;
+    foreach (var sub in submissions)
+    {
+        ws.Cell(row, 1).Value = row - 4;
+        ws.Cell(row, 2).Value = sub.Exam?.Title ?? "—";
+        ws.Cell(row, 3).Value = sub.User?.FullName ?? "—";
+        ws.Cell(row, 4).Value = sub.User?.Username ?? "—";
+        ws.Cell(row, 5).Value = sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
+        ws.Cell(row, 6).Value = sub.Score?.ToString() ?? "—";
+        ws.Cell(row, 7).Value = sub.Score == null ? "На проверке" : "Проверено";
+        ws.Cell(row, 8).Value = sub.AdminComment ?? "";
+
+        if (sub.Score == null)
+            ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightYellow;
+        else if (sub.Score >= 80)
+            ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightGreen;
+        else
+            ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightSalmon;
+
+        row++;
+    }
+
+    // Итоги
+    row += 2;
+    ws.Cell(row, 1).Value = "Итого сдач:"; ws.Cell(row, 2).Value = submissions.Count;
+    row++;
+    ws.Cell(row, 1).Value = "Проверено:"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score != null);
+    row++;
+    ws.Cell(row, 1).Value = "Средний балл:"; 
+    ws.Cell(row, 2).Value = submissions.Any(s => s.Score != null) 
+        ? (int)submissions.Where(s => s.Score != null).Average(s => s.Score!.Value) : 0;
+    row++;
+    ws.Cell(row, 1).Value = "Успешно (≥80):"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score >= 80);
+
+    ws.Columns().AdjustToContents();
+
+    using var stream = new MemoryStream();
+    workbook.SaveAs(stream);
+    stream.Position = 0;
+
+    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                $"Все_экзамены_{DateTime.Now:yyyyMMdd}.xlsx");
+}
 }
