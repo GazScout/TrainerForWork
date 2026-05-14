@@ -18,6 +18,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Exam> Exams => Set<Exam>();
     public DbSet<ExamTask> ExamTasks => Set<ExamTask>();
     public DbSet<ExamSubmission> ExamSubmissions => Set<ExamSubmission>();
+    public DbSet<ArticleView> ArticleViews => Set<ArticleView>();
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 

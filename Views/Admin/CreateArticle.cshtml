@@ -6,21 +6,18 @@
 
 <div class="container mt-4">
     <h2>📖 Новая статья</h2>
-
-    <form method="post">
-        <div class="mb-3">
-            <label class="form-label">Название</label>
-            <input type="text" name="Title" class="form-control" required />
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Содержание</label>
-            <textarea name="Content" class="form-control" rows="10" required></textarea>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Теги (через запятую)</label>
-            <input type="text" name="Tags" class="form-control" placeholder="клиент, возврат, правила" />
-        </div>
+    <form method="post" enctype="multipart/form-data">
+        <div class="mb-3"><label class="form-label">Название</label><input type="text" name="Title" class="form-control" required /></div>
+        <div class="mb-3"><label class="form-label">Содержание</label><textarea name="Content" class="form-control" rows="10" required></textarea></div>
+        <div class="mb-3"><label class="form-label">Теги (через запятую)</label><input type="text" name="Tags" class="form-control" placeholder="клиент, возврат, правила" /></div>
+        <div class="mb-3"><label class="form-label">🖼️ Фото</label><input type="file" accept="image/*" class="form-control" onchange="uploadImage(this)" /><input type="hidden" name="ImageUrl" id="ImageUrl" /><div id="preview" class="mt-2" style="display:none;"><img id="previewImg" class="img-fluid rounded" style="max-height:150px;" /></div></div>
         <button type="submit" class="btn btn-success">💾 Сохранить</button>
         <a href="/Admin/Articles" class="btn btn-outline-secondary">Отмена</a>
     </form>
 </div>
+
+@section Scripts {
+    <script>
+        function uploadImage(input){var f=input.files[0];if(!f)return;var fd=new FormData();fd.append('image',f);fetch('/Admin/UploadImage',{method:'POST',body:fd}).then(r=>r.json()).then(d=>{if(d.success){document.getElementById('ImageUrl').value=d.url;document.getElementById('previewImg').src=d.url;document.getElementById('preview').style.display='block'}else alert(d.error)});}
+    </script>
+}

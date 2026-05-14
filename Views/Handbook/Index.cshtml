@@ -2,6 +2,7 @@
 
 @{
     ViewData["Title"] = "Справочник";
+    var viewedDict = ViewBag.ViewedDict as Dictionary<int, DateTime> ?? new Dictionary<int, DateTime>();
 }
 
 <style>
@@ -26,33 +27,53 @@
             </div>
             <div class="col-md-6 mb-2">
                 <button type="button" class="btn btn-outline-info" onclick="toggleTags()">🏷️ Теги <span id="tagCount" class="badge bg-info ms-1">0</span></button>
-                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllTags()" id="clearTagsBtn" style="display:none;">✕ Сбросить</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="clearAllTags()" id="clearTagsBtn" style="display:none;">✕ Сбросить теги</button>
             </div>
         </div>
         <div id="tagsPanel" class="tags-panel mb-2" style="display:none;">
             <input type="text" id="tagFilter" class="form-control form-control-sm mb-2" placeholder="Фильтр тегов..." onkeyup="filterTags()" />
-            <div id="tagsList" class="d-flex flex-wrap gap-1">@if (ViewBag.Tags != null) { foreach (var tag in ViewBag.Tags) { <span class="badge bg-secondary tag-badge" data-tag="@tag" onclick="toggleTag(this,'@tag')">#@tag</span> } }</div>
+            <div id="tagsList" class="d-flex flex-wrap gap-1">
+                @if (ViewBag.Tags != null) { foreach (var tag in ViewBag.Tags) { <span class="badge bg-secondary tag-badge" data-tag="@tag" onclick="toggleTag(this,'@tag')">#@tag</span> } }
+            </div>
         </div>
     </form>
 
     @if (Model.Any())
     {
-        <div class="list-group">@foreach (var article in Model) { <a href="/Handbook/Details/@article.Id" class="list-group-item list-group-item-action"><div class="d-flex justify-content-between"><h5>@article.Title</h5>@if (!string.IsNullOrEmpty(article.Tags)) { <small class="text-muted">@foreach (var tag in article.Tags.Split(',')) { <span class="badge bg-secondary me-1">@tag.Trim()</span> }</small> }</div></a> }</div>
+        <table class="table table-striped">
+            <thead><tr><th style="width:120px;text-align:center;">Статус</th><th>Название</th><th>Теги</th></tr></thead>
+            <tbody>
+                @foreach (var article in Model)
+                {
+                    var hasView = viewedDict.ContainsKey(article.Id);
+                    var lastViewedUpdate = hasView ? viewedDict[article.Id] : DateTime.MinValue;
+                    var isNew = (DateTime.UtcNow - article.CreatedAt).TotalDays < 3 && !hasView;
+                    var isUpdated = article.UpdatedAt > lastViewedUpdate && hasView;
+                    <tr>
+                        <td style="text-align:center;">
+                            @if (isNew) { <span class="badge bg-success">Новая</span> }
+                            else if (isUpdated) { <span class="badge bg-warning text-dark">Изменена</span> }
+                            else { <span class="text-muted">—</span> }
+                        </td>
+                        <td><a href="/Handbook/Details/@article.Id" class="text-decoration-none fw-bold">@article.Title</a></td>
+                        <td>@if (!string.IsNullOrEmpty(article.Tags)) { foreach (var tag in article.Tags.Split(',')) { <span class="badge bg-secondary me-1">@tag.Trim()</span> } }</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     }
     else { <div class="alert alert-info">Ничего не найдено</div> }
 </div>
 
 @section Scripts {
     <script>
-        var selectedTags = [], panelVisible = false;
-        var urlParams = new URLSearchParams(window.location.search);
-        var tagsParam = urlParams.get('tags');
-        if (tagsParam) { selectedTags = tagsParam.split(',').filter(function(t) { return t.length > 0; }); }
+        var selectedTags=[],panelVisible=false;
+        var p=new URLSearchParams(location.search),t=p.get('tags');if(t)selectedTags=t.split(',').filter(x=>x);
         updateUI();
-        function toggleTags() { panelVisible = !panelVisible; document.getElementById('tagsPanel').style.display = panelVisible ? 'block' : 'none'; if (panelVisible) document.getElementById('tagFilter').focus(); }
-        function toggleTag(el, tag) { var idx = selectedTags.indexOf(tag); if (idx >= 0) { selectedTags.splice(idx, 1); el.classList.remove('active'); } else { selectedTags.push(tag); el.classList.add('active'); } updateUI(); }
-        function filterTags() { var f = document.getElementById('tagFilter').value.toLowerCase(); document.querySelectorAll('#tagsList .tag-badge').forEach(function(b) { b.style.display = b.dataset.tag.toLowerCase().includes(f) ? 'inline-block' : 'none'; }); }
-        function clearAllTags() { selectedTags = []; updateUI(); }
-        function updateUI() { document.getElementById('selectedTags').value = selectedTags.join(','); document.getElementById('tagCount').textContent = selectedTags.length; document.getElementById('clearTagsBtn').style.display = selectedTags.length > 0 ? 'inline-block' : 'none'; document.querySelectorAll('#tagsList .tag-badge').forEach(function(b) { b.classList.toggle('active', selectedTags.indexOf(b.dataset.tag) >= 0); }); }
+        function toggleTags(){panelVisible=!panelVisible;document.getElementById('tagsPanel').style.display=panelVisible?'block':'none';if(panelVisible)document.getElementById('tagFilter').focus();}
+        function toggleTag(el,tag){var i=selectedTags.indexOf(tag);i>=0?(selectedTags.splice(i,1),el.classList.remove('active')):(selectedTags.push(tag),el.classList.add('active'));updateUI();}
+        function filterTags(){var f=document.getElementById('tagFilter').value.toLowerCase();document.querySelectorAll('#tagsList .tag-badge').forEach(b=>b.style.display=b.dataset.tag.toLowerCase().includes(f)?'inline-block':'none');}
+        function clearAllTags(){selectedTags=[];updateUI();}
+        function updateUI(){document.getElementById('selectedTags').value=selectedTags.join(',');document.getElementById('tagCount').textContent=selectedTags.length;document.getElementById('clearTagsBtn').style.display=selectedTags.length?'inline-block':'none';document.querySelectorAll('#tagsList .tag-badge').forEach(b=>b.classList.toggle('active',selectedTags.includes(b.dataset.tag)));}
     </script>
 }

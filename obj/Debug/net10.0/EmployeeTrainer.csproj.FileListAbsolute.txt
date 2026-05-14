@@ -224,4 +224,4 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/RBush.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/SixLabors.Fonts.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/System.IO.Packaging.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/0obl6xfhvi-{0}-lhjviwbowv-lhjviwbowv.gz
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/0obl6xfhvi-{0}-729u0cpx9k-729u0cpx9k.gz

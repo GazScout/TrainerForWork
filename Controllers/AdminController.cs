@@ -99,7 +99,15 @@ public class AdminController : Controller
         if (id != article.Id) return NotFound();
         if (ModelState.IsValid)
         {
-            _context.Update(article);
+            var existing = await _context.HandbookArticles.FindAsync(id);
+            if (existing == null) return NotFound();
+
+            existing.Title = article.Title;
+            existing.Content = article.Content;
+            existing.Tags = article.Tags;
+            existing.ImageUrl = article.ImageUrl;
+            existing.UpdatedAt = DateTime.UtcNow;  // ← обязательно
+
             await _context.SaveChangesAsync();
             await LogAudit("Update", "Article", id, $"Статья: {article.Title}");
             return RedirectToAction(nameof(Articles));
@@ -634,8 +642,15 @@ public class AdminController : Controller
 
     public async Task<IActionResult> ReviewExams(bool showAll = false)
     {
-        var query = _context.ExamSubmissions.Include(s => s.User).Include(s => s.Exam).ThenInclude(e => e.Tasks).AsQueryable();
-        if (!showAll) query = query.Where(s => s.Score == null);
+        var query = _context.ExamSubmissions
+            .Include(s => s.User)
+            .Include(s => s.Exam!)
+                .ThenInclude(e => e.Tasks)
+            .AsQueryable();
+
+        if (!showAll)
+            query = query.Where(s => s.Score == null);
+
         ViewBag.ShowAll = showAll;
         return View(await query.OrderByDescending(s => s.SubmittedAt).ToListAsync());
     }
