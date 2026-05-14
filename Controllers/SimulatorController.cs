@@ -17,6 +17,8 @@ public class SimulatorController : Controller
         _context = context;
     }
 
+    #region Группы заданий
+
     public async Task<IActionResult> Index()
     {
         var groups = await _context.TaskGroups
@@ -25,12 +27,11 @@ public class SimulatorController : Controller
             .OrderBy(g => g.CreatedAt)
             .ToListAsync();
 
-        var ungrouped = await _context.SimulatorTasks
+        ViewBag.UngroupedTasks = await _context.SimulatorTasks
             .Where(t => t.TaskGroupId == null)
             .OrderBy(t => t.CreatedAt)
             .ToListAsync();
 
-        ViewBag.UngroupedTasks = ungrouped;
         return View(groups);
     }
 
@@ -40,9 +41,12 @@ public class SimulatorController : Controller
             .Include(g => g.Tasks)
             .FirstOrDefaultAsync(g => g.Id == id && g.IsPublished);
 
-        if (group == null) return NotFound();
-        return View(group);
+        return group == null ? NotFound() : View(group);
     }
+
+    #endregion
+
+    #region Маппинг заданий
 
     private List<SimulatorTaskViewModel> MapTasks(List<SimulatorTask> tasks)
     {
@@ -54,11 +58,10 @@ public class SimulatorController : Controller
                 Explanation = t.Explanation, Hint = t.Hint, ImageUrl = t.ImageUrl
             };
 
-            if (t.Type == TaskType.PhotoSingle || t.Type == TaskType.PhotoMultiple)
+            if (t.Type is TaskType.PhotoSingle or TaskType.PhotoMultiple)
             {
                 var parts = t.AnswerJson.Split('|', StringSplitOptions.RemoveEmptyEntries);
                 vm.Options = parts.Select(p => p.Trim()).OrderBy(_ => Guid.NewGuid()).ToList();
-                
                 var correctAnswers = t.Content.Split('|', StringSplitOptions.RemoveEmptyEntries);
                 vm.CorrectIndexes = correctAnswers.Select(c => vm.Options.IndexOf(c.Trim())).Where(i => i >= 0).ToList();
             }
@@ -79,4 +82,6 @@ public class SimulatorController : Controller
             return vm;
         }).ToList();
     }
+
+    #endregion
 }

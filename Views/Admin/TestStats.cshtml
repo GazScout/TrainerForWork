@@ -9,33 +9,17 @@
     <a href="/Admin/Tests" class="btn btn-outline-secondary mb-3">← К тестам</a>
 
     <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Сотрудник</th>
-                <th>Тест</th>
-                <th>Результат</th>
-                <th>Время</th>
-                <th>Дата</th>
-            </tr>
-        </thead>
+        <thead><tr><th>Сотрудник</th><th>Тест</th><th>Результат</th><th>Время</th><th>Дата</th></tr></thead>
         <tbody>
-            @foreach (var result in Model)
+            @foreach (var r in Model)
             {
+                var ts = TimeSpan.FromSeconds(r.TimeSpentSeconds);
                 <tr>
-                    <td>@(result.User?.FullName ?? result.User?.Username ?? "Пользователь удалён")</td>
-                    <td>@(result.Test?.Title ?? "Тест удалён")</td>
-                    <td>
-                        <span class="badge @(result.Percentage >= 80 ? "bg-success" : result.Percentage >= 50 ? "bg-warning" : "bg-danger")">
-                            @result.Score/@result.TotalQuestions (@result.Percentage%)
-                        </span>
-                    </td>
-                    <td>
-                        @{
-                            var ts = TimeSpan.FromSeconds(result.TimeSpentSeconds);
-                        }
-                        @(ts.TotalMinutes >= 1 ? $"{(int)ts.TotalMinutes} мин {ts.Seconds} сек" : $"{ts.Seconds} сек")
-                    </td>
-                    <td>@result.CompletedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                    <td>@(r.User?.FullName ?? r.User?.Username ?? "—")</td>
+                    <td>@(r.Test?.Title ?? "—")</td>
+                    <td><span class="badge @(r.Percentage >= 80 ? "bg-success" : r.Percentage >= 50 ? "bg-warning text-dark" : "bg-danger")">@r.Score/@r.TotalQuestions (@r.Percentage%)</span></td>
+                    <td>@(ts.TotalMinutes >= 1 ? $"{(int)ts.TotalMinutes} мин {ts.Seconds} сек" : $"{ts.Seconds} сек")</td>
+                    <td>@r.CompletedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                 </tr>
             }
         </tbody>

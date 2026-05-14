@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using EmployeeTrainer.Models;
 
 namespace EmployeeTrainer.Services;
@@ -13,10 +14,7 @@ public class AuditService
 
     public AuditLog CreateLogEntry(string action, string entityType, int? entityId = null, string? details = null)
     {
-        var userIdClaim = _httpContextAccessor.HttpContext?.User
-            .FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        
-        var ip = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
+        var userIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
         return new AuditLog
         {
@@ -26,7 +24,7 @@ public class AuditService
             EntityId = entityId,
             Details = details,
             Timestamp = DateTime.UtcNow,
-            IpAddress = ip
+            IpAddress = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString()
         };
     }
 }

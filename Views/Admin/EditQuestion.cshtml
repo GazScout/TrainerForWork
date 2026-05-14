@@ -6,11 +6,8 @@
     var correctAnswersJson = ViewBag.CorrectAnswersJson as string ?? "[0]";
     var allowMultiple = ViewBag.AllowMultipleCorrect as bool? ?? false;
     var testId = ViewBag.TestId;
-
     var options = optionsText.Split('\n', StringSplitOptions.RemoveEmptyEntries).Select(o => o.Trim()).ToList();
-    var correctIndexes = string.IsNullOrEmpty(correctAnswersJson)
-        ? new List<int> { 0 }
-        : System.Text.Json.JsonSerializer.Deserialize<List<int>>(correctAnswersJson) ?? new List<int> { 0 };
+    var correctIndexes = string.IsNullOrEmpty(correctAnswersJson) ? new List<int> { 0 } : System.Text.Json.JsonSerializer.Deserialize<List<int>>(correctAnswersJson) ?? new List<int> { 0 };
 }
 
 <style>
@@ -38,17 +35,13 @@
         <input type="hidden" name="CorrectAnswersJson" id="CorrectAnswersJson" />
         <input type="hidden" name="AllowMultipleCorrect" id="AllowMultipleCorrect" value="@allowMultiple.ToString().ToLower()" />
 
-        <div class="mb-3">
-            <label class="form-label">Текст вопроса</label>
-            <input type="text" name="questionText" class="form-control" value="@questionText" required />
-        </div>
+        <div class="mb-3"><label class="form-label">Текст вопроса</label><input type="text" name="questionText" class="form-control" value="@questionText" required /></div>
 
         <div class="mb-2">
             <label class="form-label">Варианты ответа</label>
             <div class="form-check mb-2">
-                <input type="checkbox" class="form-check-input" id="multipleMode" 
-                       @(allowMultiple ? "checked" : "") onchange="toggleMultiple()" />
-                <label class="form-check-label" for="multipleMode">Несколько правильных ответов</label>
+                <input type="checkbox" class="form-check-input" id="multipleMode" @(allowMultiple ? "checked" : "") onchange="toggleMultiple()" />
+                <label class="form-check-label" for="multipleMode">☑️ Несколько правильных ответов</label>
             </div>
         </div>
 
@@ -56,21 +49,18 @@
             @for (int i = 0; i < options.Count; i++)
             {
                 <div class="option-row">
-                    <input type="@(allowMultiple ? "checkbox" : "radio")" 
-                           name="correctOption" value="@i" 
-                           class="form-check-input option-check"
-                           @(correctIndexes.Contains(i) ? "checked" : "") />
+                    <input type="@(allowMultiple ? "checkbox" : "radio")" name="correctOption" value="@i" class="form-check-input option-check" @(correctIndexes.Contains(i) ? "checked" : "") />
                     <input type="text" class="form-control option-text" value="@options[i]" required />
-                        <span class="remove-option" onclick="this.parentElement.remove()">✕</span>
-                    </div>
+                    <span class="remove-option" onclick="this.parentElement.remove()">✕</span>
+                </div>
             }
         </div>
-        <div>
-                <a class="btn btn-outline-secondary" onclick="addOption()">+ Добавить вариант</a>
-        </div>
+        <a class="add-option-btn" onclick="addOption()">+ Добавить вариант</a>
+
+        <div class="mt-3"><label class="form-label">💡 Пояснение (показывается при ошибке)</label><input type="text" name="Explanation" class="form-control" value="@ViewBag.Explanation" /></div>
 
         <div class="mt-3">
-            <button type="submit" class="btn btn-primary">💾 Сохранить изменения</button>
+            <button type="submit" class="btn btn-primary">💾 Сохранить</button>
             <a href="/Admin/ManageQuestions?testId=@testId" class="btn btn-outline-secondary">Отмена</a>
         </div>
     </form>
@@ -79,42 +69,8 @@
 @section Scripts {
     <script>
         var isMultiple = @allowMultiple.ToString().ToLower();
-
-        function toggleMultiple() {
-            isMultiple = document.getElementById('multipleMode').checked;
-            document.getElementById('AllowMultipleCorrect').value = isMultiple;
-            var checks = document.querySelectorAll('.option-check');
-            checks.forEach(function(c) {
-                c.type = isMultiple ? 'checkbox' : 'radio';
-                c.checked = false;
-            });
-        }
-
-        function addOption() {
-            var container = document.getElementById('optionsContainer');
-            var idx = container.querySelectorAll('.option-row').length;
-            var div = document.createElement('div');
-            div.className = 'option-row';
-            div.innerHTML = 
-                '<input type="' + (isMultiple ? 'checkbox' : 'radio') + '" name="correctOption" value="' + idx + '" class="form-check-input option-check" />' +
-                '<input type="text" class="form-control option-text" placeholder="Вариант ответа" required />' +
-                '<span class="remove-option" onclick="this.parentElement.remove()">✕</span>';
-            container.appendChild(div);
-        }
-
-        document.getElementById('editForm').addEventListener('submit', function() {
-            var texts = document.querySelectorAll('#optionsContainer .option-text');
-            var checks = document.querySelectorAll('#optionsContainer .option-check');
-            var options = [];
-            var correctIndexes = [];
-            texts.forEach(function(t, i) {
-                if (t.value.trim()) {
-                    options.push(t.value.trim());
-                    if (checks[i].checked) correctIndexes.push(options.length - 1);
-                }
-            });
-            document.getElementById('OptionsJson').value = JSON.stringify(options);
-            document.getElementById('CorrectAnswersJson').value = JSON.stringify(correctIndexes);
-        });
+        function toggleMultiple() { isMultiple = document.getElementById('multipleMode').checked; document.getElementById('AllowMultipleCorrect').value = isMultiple; document.querySelectorAll('.option-check').forEach(c => { c.type = isMultiple ? 'checkbox' : 'radio'; c.checked = false; }); }
+        function addOption() { var c = document.getElementById('optionsContainer'), idx = c.querySelectorAll('.option-row').length, d = document.createElement('div'); d.className = 'option-row'; d.innerHTML = '<input type="' + (isMultiple ? 'checkbox' : 'radio') + '" name="correctOption" value="' + idx + '" class="form-check-input option-check" /><input type="text" class="form-control option-text" placeholder="Вариант" required /><span class="remove-option" onclick="this.parentElement.remove()">✕</span>'; c.appendChild(d); }
+        document.getElementById('editForm').addEventListener('submit', function() { var texts = document.querySelectorAll('#optionsContainer .option-text'), checks = document.querySelectorAll('#optionsContainer .option-check'), opts = [], cis = []; texts.forEach((t, i) => { if (t.value.trim()) { opts.push(t.value.trim()); if (checks[i].checked) cis.push(opts.length - 1); } }); document.getElementById('OptionsJson').value = JSON.stringify(opts); document.getElementById('CorrectAnswersJson').value = JSON.stringify(cis); });
     </script>
 }

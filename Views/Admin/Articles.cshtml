@@ -6,27 +6,26 @@
 
 <div class="container mt-4">
     <h2>📖 Управление статьями</h2>
-    
-    <a href="/Admin/CreateArticle" class="btn btn-success mb-3">+ Добавить статью</a>
-    <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
-<form method="get" class="d-flex mb-3 justify-content-end">
-    <input type="text" name="search" class="form-control me-2" style="max-width: 250px;" 
-           placeholder="Поиск по названию или тегам..." value="@Context.Request.Query["search"]">
-    <button type="submit" class="btn btn-primary">🔍</button>
-    @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
-    {
-        <a href="/Admin/Articles" class="btn btn-outline-secondary ms-1">✕</a>
-    }
-</form>
+
+    <div class="d-flex justify-content-between mb-3">
+        <div>
+            <a href="/Admin/CreateArticle" class="btn btn-success">+ Добавить статью</a>
+            <a href="/Admin" class="btn btn-outline-secondary">← Назад</a>
+        </div>
+        <form method="get" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" style="max-width:250px;"
+                   placeholder="Поиск по названию или тегам..." value="@Context.Request.Query["search"]">
+            <button type="submit" class="btn btn-primary">🔍</button>
+            @if (!string.IsNullOrEmpty(Context.Request.Query["search"]))
+            {
+                <a href="/Admin/Articles" class="btn btn-outline-secondary ms-1">✕</a>
+            }
+        </form>
+    </div>
+
     <table class="table table-striped">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Название</th>
-                <th>Теги</th>
-                <th>Дата</th>
-                <th>Действия</th>
-            </tr>
+            <tr><th>ID</th><th>Название</th><th>Теги</th><th>Дата</th><th>Действия</th></tr>
         </thead>
         <tbody>
             @foreach (var article in Model)
@@ -37,11 +36,11 @@
                     <td>@article.Tags</td>
                     <td>@article.CreatedAt.ToShortDateString()</td>
                     <td>
-                        <a href="/Admin/EditArticle/@article.Id" class="btn btn-sm btn-warning">✏️</a>
+                        <a href="/Admin/EditArticle/@article.Id" class="btn btn-sm btn-warning" title="Редактировать">✏️</a>
                         <form method="post" action="/Admin/DeleteArticle/@article.Id" style="display:inline">
-    <button type="submit" class="btn btn-sm btn-danger" 
-            onclick="return confirm('Удалить статью «@article.Title»?')">🗑️</button>
-</form>
+                            <button class="btn btn-sm btn-danger" title="Удалить"
+                                    onclick="return confirm('Удалить статью «@article.Title»?')">🗑️</button>
+                        </form>
                     </td>
                 </tr>
             }

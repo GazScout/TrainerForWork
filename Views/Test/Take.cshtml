@@ -5,117 +5,39 @@
 }
 
 <div class="container mt-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/Test">Тесты</a></li>
-            <li class="breadcrumb-item active">@Model.Title</li>
-        </ol>
-    </nav>
-
-    @if (ViewBag.IsPreview != null && (bool)ViewBag.IsPreview)
-    {
-        <div class="alert alert-warning d-flex justify-content-between align-items-center">
-            <span>⚠️ Режим предпросмотра — результаты не сохраняются</span>
-            <a href="/Admin/Tests" class="btn btn-sm btn-outline-warning">← Вернуться к тестам</a>
-        </div>
-    }
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/Test">Тесты</a></li><li class="breadcrumb-item active">@Model.Title</li></ol></nav>
+    @if (ViewBag.IsPreview != null && (bool)ViewBag.IsPreview) { <div class="alert alert-warning d-flex justify-content-between"><span>⚠️ Предпросмотр — результаты не сохраняются</span><a href="/Admin/Tests" class="btn btn-sm btn-outline-warning">← К тестам</a></div> }
 
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <div>
-            <h2>@Model.Title</h2>
-            @if (!string.IsNullOrEmpty(Model.Description))
-            {
-                <p class="text-muted">@Model.Description</p>
-            }
-        </div>
-        @if (Model.TimeLimitMinutes > 0)
-        {
-            <div class="text-center">
-                <div class="display-6 fw-bold text-danger" id="timer">@Model.TimeLimitMinutes:00</div>
-                <small class="text-muted">осталось</small>
-            </div>
-        }
-        else
-        {
-            <div class="text-center">
-                <div class="display-6 fw-bold text-muted" id="timer">0:00</div>
-                <small class="text-muted">прошло</small>
-            </div>
-        }
+        <div><h2>@Model.Title</h2>@if (!string.IsNullOrEmpty(Model.Description)) { <p class="text-muted">@Model.Description</p> }</div>
+        @if (Model.TimeLimitMinutes > 0) { <div class="text-center"><div class="display-6 fw-bold text-danger" id="timer">@Model.TimeLimitMinutes:00</div><small class="text-muted">осталось</small></div> }
+        else { <div class="text-center"><div class="display-6 fw-bold text-muted" id="timer">0:00</div><small class="text-muted">прошло</small></div> }
     </div>
 
     @if (ViewBag.IsPreview == null || !(bool)ViewBag.IsPreview)
     {
         <form method="post" action="/Test/Check" id="testForm">
-            <input type="hidden" name="testId" value="@Model.TestId" />
-            <input type="hidden" name="timeSpentSeconds" id="timeSpent" value="0" />
+            <input type="hidden" name="testId" value="@Model.TestId" /><input type="hidden" name="timeSpentSeconds" id="timeSpent" value="0" />
             <p>Всего вопросов: <strong>@Model.Questions.Count</strong></p>
-
-            @foreach (var question in Model.Questions)
+            @foreach (var q in Model.Questions)
             {
-                var optionsList = question.Options;
-                <div class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">@question.Question</h5>
-                        @if (question.AllowMultipleCorrect)
-                        {
-                            <small class="text-muted">Выберите все правильные ответы</small>
-                        }
-                        @for (int i = 0; i < optionsList.Count; i++)
-                        {
-                            <div class="form-check">
-                                <input class="form-check-input"
-                                       type="@(question.AllowMultipleCorrect ? "checkbox" : "radio")"
-                                       name="answers[@question.Id]@(question.AllowMultipleCorrect ? "[]" : "")"
-                                       value="@i" id="q@question.Id-o@i">
-                                <label class="form-check-label" for="q@question.Id-o@i">@optionsList[i]</label>
-                            </div>
-                        }
-                        <button type="button" class="btn btn-outline-warning btn-sm mt-2" 
-                            onclick="openReport('Test', @question.Id, '@question.Question.Replace("'", "\\'")')">
-                            🚩 Репорт
-                        </button>
-                    </div>
-                </div>
+                <div class="card mb-3"><div class="card-body">
+                    <h5>@q.Question</h5>@if (q.AllowMultipleCorrect) { <small class="text-muted">Выберите все правильные</small> }
+                    @for (int i = 0; i < q.Options.Count; i++) { <div class="form-check"><input class="form-check-input" type="@(q.AllowMultipleCorrect?"checkbox":"radio")" name="answers[@q.Id]@(q.AllowMultipleCorrect?"[]":"")" value="@i" id="q@q.Id-o@i" /><label class="form-check-label" for="q@q.Id-o@i">@q.Options[i]</label></div> }
+                    <button type="button" class="btn btn-outline-warning btn-sm mt-2" onclick="openReport('Test',@q.Id,'@q.Question.Replace("'","\\'")')">🚩 Репорт</button>
+                </div></div>
             }
-
-            <button type="submit" class="btn btn-primary btn-lg">📋 Завершить тест</button>
-            <a href="/Test" class="btn btn-outline-secondary btn-lg">← К списку тестов</a>
+            <button type="submit" class="btn btn-primary btn-lg">📋 Завершить</button><a href="/Test" class="btn btn-outline-secondary btn-lg">← К списку</a>
         </form>
     }
     else
     {
         <p>Всего вопросов: <strong>@Model.Questions.Count</strong></p>
-        @foreach (var question in Model.Questions)
+        @foreach (var q in Model.Questions)
         {
-            var optionsList = question.Options;
-            var correctIndexes = !string.IsNullOrEmpty(question.CorrectAnswersJson)
-                ? System.Text.Json.JsonSerializer.Deserialize<List<int>>(question.CorrectAnswersJson) ?? new List<int>()
-                : new List<int>();
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">@question.Question</h5>
-                    @if (question.AllowMultipleCorrect)
-                    {
-                        <small class="text-muted">Несколько правильных ответов</small>
-                    }
-                    @for (int i = 0; i < optionsList.Count; i++)
-                    {
-                        var isCorrect = correctIndexes.Contains(i);
-                        <div class="form-check">
-                            <input class="form-check-input"
-                                   type="@(question.AllowMultipleCorrect ? "checkbox" : "radio")"
-                                   name="preview-@question.Id" value="@i"
-                                   id="pq@question.Id-o@i" @(isCorrect ? "checked" : "")>
-                            <label class="form-check-label @(isCorrect ? "text-success fw-bold" : "")"
-                                   for="pq@question.Id-o@i">
-                                @optionsList[i]
-                                @if (isCorrect) { <span class="badge bg-success ms-1">✓</span> }
-                            </label>
-                        </div>
-                    }
-                </div>
-            </div>
+            var correct = !string.IsNullOrEmpty(q.CorrectAnswersJson) ? System.Text.Json.JsonSerializer.Deserialize<List<int>>(q.CorrectAnswersJson) ?? new() : new();
+            <div class="card mb-3"><div class="card-body"><h5>@q.Question</h5>@if (q.AllowMultipleCorrect) { <small class="text-muted">Несколько правильных</small> }
+            @for (int i = 0; i < q.Options.Count; i++) { var ok = correct.Contains(i); <div class="form-check"><input class="form-check-input" type="@(q.AllowMultipleCorrect?"checkbox":"radio")" @(ok?"checked":"") /><label class="form-check-label @(ok?"text-success fw-bold":"")">@q.Options[i] @(ok?Html.Raw("<span class=\"badge bg-success ms-1\">✓</span>"):"")</label></div> }</div></div>
         }
     }
 </div>
@@ -124,35 +46,10 @@
     @if (ViewBag.IsPreview == null || !(bool)ViewBag.IsPreview)
     {
         <script>
-            var timeLimit = @Model.TimeLimitMinutes * 60;
-            var elapsedSeconds = 0;
-            var timerInterval;
-            function updateTimer() {
-                elapsedSeconds++;
-                document.getElementById('timeSpent').value = elapsedSeconds;
-                if (timeLimit > 0) {
-                    var remaining = timeLimit - elapsedSeconds;
-                    if (remaining <= 0) {
-                        clearInterval(timerInterval);
-                        document.getElementById('timer').textContent = '0:00';
-                        alert('Время вышло!');
-                        document.getElementById('testForm').submit();
-                        return;
-                    }
-                    var m = Math.floor(remaining / 60);
-                    var s = remaining % 60;
-                    document.getElementById('timer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
-                    if (remaining < 60) document.getElementById('timer').classList.add('text-danger');
-                } else {
-                    var m = Math.floor(elapsedSeconds / 60);
-                    var s = elapsedSeconds % 60;
-                    document.getElementById('timer').textContent = m + ':' + (s < 10 ? '0' : '') + s;
-                }
-            }
-            timerInterval = setInterval(updateTimer, 1000);
-            window.addEventListener('beforeunload', function(e) {
-                if (elapsedSeconds > 0) { e.preventDefault(); e.returnValue = ''; }
-            });
+            var timeLimit=@Model.TimeLimitMinutes*60,elapsed=0,timer;
+            function update(){elapsed++;document.getElementById('timeSpent').value=elapsed;if(timeLimit>0){var r=timeLimit-elapsed;if(r<=0){clearInterval(timer);document.getElementById('timer').textContent='0:00';alert('Время вышло!');document.getElementById('testForm').submit();return}var m=Math.floor(r/60),s=r%60;document.getElementById('timer').textContent=m+':'+(s<10?'0':'')+s;if(r<60)document.getElementById('timer').classList.add('text-danger')}else{var m=Math.floor(elapsed/60),s=elapsed%60;document.getElementById('timer').textContent=m+':'+(s<10?'0':'')+s}}
+            timer=setInterval(update,1000);
+            window.addEventListener('beforeunload',function(e){if(elapsed>0){e.preventDefault();e.returnValue=''}});
         </script>
     }
 }

@@ -16,37 +16,15 @@
                 <div class="col-md-6 mb-3">
                     <div class="card h-100 @(isCompleted ? "border-success" : "")">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <h5>@exam.Title</h5>
-                                @if (isCompleted)
-                                {
-                                    <span class="badge bg-success">✅ Сдан</span>
-                                }
-                            </div>
-                            @if (!string.IsNullOrEmpty(exam.Description))
-                            {
-                                <p class="text-muted">@exam.Description</p>
-                            }
-                            <p>
-                                <small>Заданий: @exam.Tasks.Count</small>
-                                @if (exam.TimeLimitMinutes > 0)
-                                {
-                                    <small> | ⏱️ @exam.TimeLimitMinutes мин</small>
-                                }
-                            </p>
+                            <div class="d-flex justify-content-between"><h5>@exam.Title</h5>@if (isCompleted) { <span class="badge bg-success">✅ Сдан</span> }</div>
+                            @if (!string.IsNullOrEmpty(exam.Description)) { <p class="text-muted">@exam.Description</p> }
+                            <p><small>Заданий: @exam.Tasks.Count</small>@if (exam.TimeLimitMinutes > 0) { <small> | ⏱️ @exam.TimeLimitMinutes мин</small> }</p>
                         </div>
-                        <div class="card-footer bg-transparent border-0">
-                            <a href="/Exam/Take/@exam.Id" class="btn btn-primary">
-                                @(isCompleted ? "🔄 Пересдать" : "Пройти экзамен")
-                            </a>
-                        </div>
+                        <div class="card-footer bg-transparent border-0"><a href="/Exam/Take/@exam.Id" class="btn btn-primary">@(isCompleted ? "🔄 Пересдать" : "Пройти экзамен")</a></div>
                     </div>
                 </div>
             }
         </div>
     }
-    else
-    {
-        <div class="alert alert-info">Пока нет доступных экзаменов.</div>
-    }
+    else { <div class="alert alert-info">Пока нет доступных экзаменов.</div> }
 </div>

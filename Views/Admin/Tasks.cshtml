@@ -10,70 +10,31 @@
         <h2>🔧 Задания тренажёра</h2>
         <div>
             <a href="/Admin/TaskGroups" class="btn btn-outline-primary me-1">📁 Группы</a>
-            <a href="/Admin/CreateTask" class="btn btn-success">+ Создать задание</a>
+            <a href="/Admin/CreateTask" class="btn btn-success">+ Создать</a>
         </div>
     </div>
     <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
 
     <form method="get" class="row mb-3">
-        <div class="col-md-4">
-            <select name="groupId" class="form-select" onchange="this.form.submit()">
-                <option value="">Все группы</option>
-                @if (ViewBag.Groups != null)
-                {
-                    @foreach (var g in ViewBag.Groups)
-                    {
-                        <option value="@g.Id" selected="@(ViewBag.SelectedGroupId == g.Id)">@g.Title</option>
-                    }
-                }
-            </select>
-        </div>
-        <div class="col-md-4">
-            <input type="text" name="search" class="form-control" placeholder="Поиск по названию..." value="@Context.Request.Query["search"]" />
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary">🔍</button>
-        </div>
+        <div class="col-md-4"><select name="groupId" class="form-select" onchange="this.form.submit()"><option value="">Все группы</option>@if (ViewBag.Groups != null) { foreach (var g in ViewBag.Groups) { <option value="@g.Id" selected="@(ViewBag.SelectedGroupId == g.Id)">@g.Title</option> } }</select></div>
+        <div class="col-md-4"><input type="text" name="search" class="form-control" placeholder="Поиск..." value="@Context.Request.Query["search"]" /></div>
+        <div class="col-md-2"><button type="submit" class="btn btn-primary">🔍</button></div>
     </form>
 
     <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Тип</th>
-                <th>Название</th>
-                <th>Группа</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
+        <thead><tr><th>ID</th><th>Тип</th><th>Название</th><th>Группа</th><th></th></tr></thead>
         <tbody>
             @foreach (var t in Model)
             {
                 <tr>
                     <td>@t.Id</td>
-                    <td>
-    @switch (t.Type)
-    {
-        case TaskType.PhotoSingle:
-            <text>📷 ○ Один</text>
-            break;
-        case TaskType.PhotoMultiple:
-            <text>📷 ☑️ Несколько</text>
-            break;
-        case TaskType.PhotoFree:
-            <text>📷 ✍️ Свободный</text>
-            break;
-        case TaskType.FormTask:
-            <text>📝 Форма</text>
-            break;
-    }
-</td>
+                    <td>@(t.Type switch { TaskType.PhotoSingle => "📷 ○", TaskType.PhotoMultiple => "📷 ☑️", TaskType.PhotoFree => "📷 ✍️", TaskType.FormTask => "📝 Форма", _ => "—" })</td>
                     <td>@t.Title</td>
                     <td>@(t.TaskGroup?.Title ?? "—")</td>
                     <td>
-                        <a href="/Admin/EditTask/@t.Id" class="btn btn-sm btn-warning">✏️</a>
+                        <a href="/Admin/EditTask/@t.Id" class="btn btn-sm btn-warning" title="Редактировать">✏️</a>
                         <form method="post" action="/Admin/DeleteTask/@t.Id" style="display:inline">
-                            <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить задание?')">🗑️</button>
+                            <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить задание?')" title="Удалить">🗑️</button>
                         </form>
                     </td>
                 </tr>

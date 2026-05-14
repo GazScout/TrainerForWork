@@ -22,6 +22,8 @@ public class AdminController : Controller
         _audit = audit;
     }
 
+    #region Вспомогательные методы
+
     private async Task LogAudit(string action, string entityType, int? entityId = null, string? details = null)
     {
         var logEntry = _audit.CreateLogEntry(action, entityType, entityId, details);
@@ -29,44 +31,37 @@ public class AdminController : Controller
         await _context.SaveChangesAsync();
     }
 
+    #endregion
+
+    #region Дашборд
+
     public async Task<IActionResult> Index()
-{
-    // Общая статистика
-    ViewBag.TotalUsers = await _context.Users.CountAsync();
-    ViewBag.ActiveUsers = await _context.Users.CountAsync(u => u.IsActive);
-    ViewBag.TotalTests = await _context.Tests.CountAsync();
-    ViewBag.TotalQuestions = await _context.TestQuestions.CountAsync();
-    ViewBag.TotalExams = await _context.Exams.CountAsync();
-    ViewBag.TotalTasks = await _context.SimulatorTasks.CountAsync();
-    ViewBag.TotalArticles = await _context.HandbookArticles.CountAsync();
-    ViewBag.PendingReports = await _context.Reports.CountAsync(r => r.Status == ReportStatus.New);
-    ViewBag.PendingExams = await _context.ExamSubmissions.CountAsync(s => s.Score == null);
-    ViewBag.PendingTasks = await _context.TaskSubmissions.CountAsync(s => s.Score == null);
-    ViewBag.RecentResults = await _context.TestResults
-        .Include(r => r.User)
-        .Include(r => r.Test)
-        .OrderByDescending(r => r.CompletedAt)
-        .Take(5)
-        .ToListAsync();
+    {
+        ViewBag.TotalUsers = await _context.Users.CountAsync();
+        ViewBag.ActiveUsers = await _context.Users.CountAsync(u => u.IsActive);
+        ViewBag.TotalTests = await _context.Tests.CountAsync();
+        ViewBag.TotalQuestions = await _context.TestQuestions.CountAsync();
+        ViewBag.TotalExams = await _context.Exams.CountAsync();
+        ViewBag.TotalTasks = await _context.SimulatorTasks.CountAsync();
+        ViewBag.TotalArticles = await _context.HandbookArticles.CountAsync();
+        ViewBag.PendingReports = await _context.Reports.CountAsync(r => r.Status == ReportStatus.New);
+        ViewBag.PendingExams = await _context.ExamSubmissions.CountAsync(s => s.Score == null);
+        ViewBag.PendingTasks = await _context.TaskSubmissions.CountAsync(s => s.Score == null);
+        ViewBag.RecentResults = await _context.TestResults
+            .Include(r => r.User).Include(r => r.Test)
+            .OrderByDescending(r => r.CompletedAt).Take(5).ToListAsync();
+        ViewBag.AvgScore = await _context.TestResults.AnyAsync()
+            ? (int)await _context.TestResults.AverageAsync(r => r.Percentage) : 0;
+        ViewBag.TopUsers = await _context.TestResults
+            .Include(r => r.User).GroupBy(r => r.UserId)
+            .Select(g => new { User = g.First().User, AvgScore = (int)g.Average(r => r.Percentage), TestsPassed = g.Count() })
+            .OrderByDescending(x => x.AvgScore).Take(5).ToListAsync();
+        return View();
+    }
 
-    ViewBag.AvgScore = await _context.TestResults.AnyAsync()
-        ? (int)await _context.TestResults.AverageAsync(r => r.Percentage)
-        : 0;
+    #endregion
 
-    ViewBag.TopUsers = await _context.TestResults
-        .Include(r => r.User)
-        .GroupBy(r => r.UserId)
-        .Select(g => new {
-            User = g.First().User,
-            AvgScore = (int)g.Average(r => r.Percentage),
-            TestsPassed = g.Count()
-        })
-        .OrderByDescending(x => x.AvgScore)
-        .Take(5)
-        .ToListAsync();
-
-    return View();
-}
+    #region Справочник
 
     public async Task<IActionResult> Articles(string? search)
     {
@@ -125,11 +120,14 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Articles));
     }
 
+    #endregion
+
+    #region Тесты
+
     public async Task<IActionResult> Tests(string? search)
     {
         var query = _context.Tests.Include(t => t.Questions).AsQueryable();
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(t => t.Title.Contains(search));
+        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(t => t.Title.Contains(search));
         return View(await query.OrderByDescending(t => t.CreatedAt).ToListAsync());
     }
 
@@ -140,14 +138,7 @@ public class AdminController : Controller
     {
         if (!string.IsNullOrWhiteSpace(title))
         {
-            var test = new Test
-            {
-                Title = title,
-                Description = description,
-                TimeLimitMinutes = timeLimitMinutes,
-                ShuffleQuestions = shuffleQuestions,
-                CreatedAt = DateTime.UtcNow
-            };
+            var test = new Test { Title = title, Description = description, TimeLimitMinutes = timeLimitMinutes, ShuffleQuestions = shuffleQuestions, CreatedAt = DateTime.UtcNow };
             _context.Tests.Add(test);
             await _context.SaveChangesAsync();
             await LogAudit("Create", "Test", test.Id, $"Тест: {title}");
@@ -169,11 +160,8 @@ public class AdminController : Controller
         {
             var question = new TestQuestion
             {
-                TestId = testId,
-                Question = questionText,
-                OptionsJson = OptionsJson,
-                CorrectAnswersJson = CorrectAnswersJson,
-                AllowMultipleCorrect = AllowMultipleCorrect,
+                TestId = testId, Question = questionText, OptionsJson = OptionsJson,
+                CorrectAnswersJson = CorrectAnswersJson, AllowMultipleCorrect = AllowMultipleCorrect,
                 OrderIndex = await _context.TestQuestions.CountAsync(q => q.TestId == testId)
             };
             _context.TestQuestions.Add(question);
@@ -227,31 +215,11 @@ public class AdminController : Controller
     {
         var original = await _context.Tests.Include(t => t.Questions).FirstOrDefaultAsync(t => t.Id == id);
         if (original == null) return NotFound();
-
-        var copy = new Test
-        {
-            Title = $"{original.Title} (Копия)",
-            Description = original.Description,
-            TimeLimitMinutes = original.TimeLimitMinutes,
-            ShuffleQuestions = original.ShuffleQuestions,
-            CreatedAt = DateTime.UtcNow
-        };
+        var copy = new Test { Title = $"{original.Title} (Копия)", Description = original.Description, TimeLimitMinutes = original.TimeLimitMinutes, ShuffleQuestions = original.ShuffleQuestions, CreatedAt = DateTime.UtcNow };
         _context.Tests.Add(copy);
         await _context.SaveChangesAsync();
-
         foreach (var q in original.Questions.OrderBy(q => q.OrderIndex))
-        {
-            _context.TestQuestions.Add(new TestQuestion
-            {
-                TestId = copy.Id,
-                Question = q.Question,
-                OptionsJson = q.OptionsJson,
-                CorrectAnswersJson = q.CorrectAnswersJson,
-                AllowMultipleCorrect = q.AllowMultipleCorrect,
-                Category = q.Category,
-                OrderIndex = q.OrderIndex
-            });
-        }
+            _context.TestQuestions.Add(new TestQuestion { TestId = copy.Id, Question = q.Question, OptionsJson = q.OptionsJson, CorrectAnswersJson = q.CorrectAnswersJson, AllowMultipleCorrect = q.AllowMultipleCorrect, Category = q.Category, OrderIndex = q.OrderIndex });
         await _context.SaveChangesAsync();
         await LogAudit("Create", "Test", copy.Id, $"Скопирован тест {id} → {copy.Id}");
         TempData["Success"] = $"Тест «{original.Title}» скопирован";
@@ -263,26 +231,17 @@ public class AdminController : Controller
     {
         var test = await _context.Tests.Include(t => t.Questions).FirstOrDefaultAsync(t => t.Id == id);
         if (test == null) return NotFound();
-
         var model = new TestTakeViewModel
         {
-            TestId = test.Id,
-            Title = $"[ПРЕДПРОСМОТР] {test.Title}",
-            Description = test.Description,
-            TimeLimitMinutes = 0,
+            TestId = test.Id, Title = $"[ПРЕДПРОСМОТР] {test.Title}", Description = test.Description, TimeLimitMinutes = 0,
             Questions = test.Questions.OrderBy(q => q.OrderIndex).Select(q => new TestQuestionViewModel
             {
-                Id = q.Id,
-                Question = q.Question,
-                Options = string.IsNullOrEmpty(q.OptionsJson) ? new List<string>()
-                    : JsonSerializer.Deserialize<List<string>>(q.OptionsJson) ?? new List<string>(),
-                CorrectIndexes = string.IsNullOrEmpty(q.CorrectAnswersJson) ? new List<int>()
-                    : JsonSerializer.Deserialize<List<int>>(q.CorrectAnswersJson) ?? new List<int>(),
-                AllowMultipleCorrect = q.AllowMultipleCorrect,
-                CorrectAnswersJson = q.CorrectAnswersJson
+                Id = q.Id, Question = q.Question,
+                Options = string.IsNullOrEmpty(q.OptionsJson) ? new List<string>() : JsonSerializer.Deserialize<List<string>>(q.OptionsJson) ?? new List<string>(),
+                CorrectIndexes = string.IsNullOrEmpty(q.CorrectAnswersJson) ? new List<int>() : JsonSerializer.Deserialize<List<int>>(q.CorrectAnswersJson) ?? new List<int>(),
+                AllowMultipleCorrect = q.AllowMultipleCorrect, CorrectAnswersJson = q.CorrectAnswersJson
             }).ToList()
         };
-
         ViewBag.IsPreview = true;
         return View("~/Views/Test/Take.cshtml", model);
     }
@@ -299,49 +258,45 @@ public class AdminController : Controller
         return Ok();
     }
 
-    [HttpPost]
-    public async Task<IActionResult> EditQuestion(int id, string questionText, string OptionsJson, string CorrectAnswersJson, bool AllowMultipleCorrect, int testId)
-    {
-        var question = await _context.TestQuestions.FindAsync(id);
-        if (question == null) return NotFound();
-
-        question.Question = questionText;
-        question.OptionsJson = OptionsJson;
-        question.CorrectAnswersJson = CorrectAnswersJson;
-        question.AllowMultipleCorrect = AllowMultipleCorrect;
-
-        await _context.SaveChangesAsync();
-        await LogAudit("Update", "Question", id, "Вопрос изменён");
-        return RedirectToAction(nameof(ManageQuestions), new { testId });
-    }
-
     [HttpGet]
     public async Task<IActionResult> EditQuestion(int id)
     {
         var question = await _context.TestQuestions.FindAsync(id);
         if (question == null) return NotFound();
-
         ViewBag.QuestionId = question.Id;
         ViewBag.QuestionText = question.Question;
-        ViewBag.Options = string.IsNullOrEmpty(question.OptionsJson)
-            ? ""
-            : string.Join("\n", System.Text.Json.JsonSerializer.Deserialize<List<string>>(question.OptionsJson) ?? new List<string>());
+        ViewBag.Options = string.IsNullOrEmpty(question.OptionsJson) ? "" : string.Join("\n", JsonSerializer.Deserialize<List<string>>(question.OptionsJson) ?? new List<string>());
         ViewBag.CorrectAnswersJson = question.CorrectAnswersJson ?? "[0]";
         ViewBag.AllowMultipleCorrect = question.AllowMultipleCorrect;
         ViewBag.TestId = question.TestId;
-
         return View();
     }
+
+    [HttpPost]
+    public async Task<IActionResult> EditQuestion(int id, string questionText, string OptionsJson, string CorrectAnswersJson, bool AllowMultipleCorrect, int testId)
+    {
+        var question = await _context.TestQuestions.FindAsync(id);
+        if (question == null) return NotFound();
+        question.Question = questionText;
+        question.OptionsJson = OptionsJson;
+        question.CorrectAnswersJson = CorrectAnswersJson;
+        question.AllowMultipleCorrect = AllowMultipleCorrect;
+        await _context.SaveChangesAsync();
+        await LogAudit("Update", "Question", id, "Вопрос изменён");
+        return RedirectToAction(nameof(ManageQuestions), new { testId });
+    }
+
+    #endregion
+
+    #region Пользователи
 
     [HttpGet]
     public async Task<IActionResult> Users(string? search)
     {
         var query = _context.Users.AsQueryable();
-        if (!string.IsNullOrWhiteSpace(search))
-            query = query.Where(u => u.Username.Contains(search) || (u.FullName != null && u.FullName.Contains(search)));
-        var users = await query.OrderByDescending(u => u.CreatedAt).ToListAsync();
+        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(u => u.Username.Contains(search) || (u.FullName != null && u.FullName.Contains(search)));
         ViewBag.CurrentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-        return View(users);
+        return View(await query.OrderByDescending(u => u.CreatedAt).ToListAsync());
     }
 
     [HttpPost]
@@ -426,6 +381,10 @@ public class AdminController : Controller
         return RedirectToAction(nameof(Users));
     }
 
+    #endregion
+
+    #region Статистика и журнал
+
     public async Task<IActionResult> TestStats()
     {
         var results = await _context.TestResults.Include(r => r.Test).Include(r => r.User)
@@ -433,43 +392,26 @@ public class AdminController : Controller
         return View(results);
     }
 
-   public async Task<IActionResult> AuditLog(string? logAction, string? entityType, string? search, int page = 1)
-{
-    var query = _context.AuditLogs
-        .Include(l => l.User)
-        .AsQueryable();
+    public async Task<IActionResult> AuditLog(string? logAction, string? entityType, string? search, int page = 1)
+    {
+        var query = _context.AuditLogs.Include(l => l.User).AsQueryable();
+        if (!string.IsNullOrWhiteSpace(logAction)) query = query.Where(l => l.Action == logAction);
+        if (!string.IsNullOrWhiteSpace(entityType)) query = query.Where(l => l.EntityType == entityType);
+        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(l => l.Details != null && l.Details.Contains(search));
+        var totalItems = await query.CountAsync();
+        var pageSize = 20;
+        var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+        if (page < 1) page = 1;
+        if (page > totalPages && totalPages > 0) page = totalPages;
+        var logs = await query.OrderByDescending(l => l.Timestamp).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        ViewBag.LogAction = logAction; ViewBag.EntityType = entityType; ViewBag.Search = search;
+        ViewBag.CurrentPage = page; ViewBag.TotalPages = totalPages; ViewBag.TotalItems = totalItems;
+        return View(logs);
+    }
 
-    if (!string.IsNullOrWhiteSpace(logAction))
-        query = query.Where(l => l.Action == logAction);
+    #endregion
 
-    if (!string.IsNullOrWhiteSpace(entityType))
-        query = query.Where(l => l.EntityType == entityType);
-
-    if (!string.IsNullOrWhiteSpace(search))
-        query = query.Where(l => l.Details != null && l.Details.Contains(search));
-
-    var totalItems = await query.CountAsync();
-    var pageSize = 20;
-    var totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
-    
-    if (page < 1) page = 1;
-    if (page > totalPages && totalPages > 0) page = totalPages;
-
-    var logs = await query
-        .OrderByDescending(l => l.Timestamp)
-        .Skip((page - 1) * pageSize)
-        .Take(pageSize)
-        .ToListAsync();
-
-    ViewBag.LogAction = logAction;
-    ViewBag.EntityType = entityType;
-    ViewBag.Search = search;
-    ViewBag.CurrentPage = page;
-    ViewBag.TotalPages = totalPages;
-    ViewBag.TotalItems = totalItems;
-
-    return View(logs);
-}
+    #region Тренажёр
 
     public async Task<IActionResult> Tasks(int? groupId, string? search)
     {
@@ -481,11 +423,7 @@ public class AdminController : Controller
         return View(await query.OrderByDescending(t => t.CreatedAt).ToListAsync());
     }
 
-    public async Task<IActionResult> CreateTask()
-    {
-        ViewBag.TaskGroups = await _context.TaskGroups.OrderBy(g => g.Title).ToListAsync();
-        return View();
-    }
+    public async Task<IActionResult> CreateTask() { ViewBag.TaskGroups = await _context.TaskGroups.OrderBy(g => g.Title).ToListAsync(); return View(); }
 
     [HttpPost]
     public async Task<IActionResult> CreateTask(SimulatorTask task)
@@ -591,43 +529,37 @@ public class AdminController : Controller
         return View(submissions);
     }
 
-    // ============ РЕПОРТЫ ============
+    #endregion
+
+    #region Репорты
 
     public async Task<IActionResult> Reports()
-{
-    var reports = await _context.Reports
-        .Include(r => r.User)
-        .Include(r => r.ResolvedBy)
-        .OrderByDescending(r => r.CreatedAt)
-        .ToListAsync();
-    return View(reports);
-}
+    {
+        var reports = await _context.Reports.Include(r => r.User).Include(r => r.ResolvedBy)
+            .OrderByDescending(r => r.CreatedAt).ToListAsync();
+        return View(reports);
+    }
 
     [HttpPost]
     public async Task<IActionResult> UpdateReportStatus(int reportId, ReportStatus status)
     {
         var report = await _context.Reports.FindAsync(reportId);
         if (report == null) return NotFound();
-
         var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-
         report.Status = status;
-        if (status == ReportStatus.Resolved)
-        {
-            report.ResolvedAt = DateTime.UtcNow;
-            report.ResolvedByUserId = adminId;
-        }
-
+        if (status == ReportStatus.Resolved) { report.ResolvedAt = DateTime.UtcNow; report.ResolvedByUserId = adminId; }
         await _context.SaveChangesAsync();
         await LogAudit("Update", "Report", reportId, $"Статус: {status}");
         return RedirectToAction(nameof(Reports));
     }
-    // ============ ЭКЗАМЕНЫ ============
+
+    #endregion
+
+    #region Экзамены
 
     public async Task<IActionResult> Exams()
     {
-        var exams = await _context.Exams.Include(e => e.Tasks).OrderByDescending(e => e.CreatedAt).ToListAsync();
-        return View(exams);
+        return View(await _context.Exams.Include(e => e.Tasks).OrderByDescending(e => e.CreatedAt).ToListAsync());
     }
 
     [HttpPost]
@@ -666,23 +598,13 @@ public class AdminController : Controller
     public async Task<IActionResult> ManageExamTasks(int examId)
     {
         var exam = await _context.Exams.Include(e => e.Tasks).FirstOrDefaultAsync(e => e.Id == examId);
-        if (exam == null) return NotFound();
-        return View(exam);
+        return exam == null ? NotFound() : View(exam);
     }
+
     [HttpPost]
     public async Task<IActionResult> AddExamTask(int examId, string title, string question, int type, string optionsJson, string correctJson, string? imageUrl)
     {
-        var task = new ExamTask
-        {
-            ExamId = examId,
-            Title = title,
-            Question = question,
-            Type = (ExamTaskType)type,
-            OptionsJson = optionsJson,
-            CorrectAnswersJson = correctJson,
-            ImageUrl = imageUrl,
-            OrderIndex = await _context.ExamTasks.CountAsync(t => t.ExamId == examId)
-        };
+        var task = new ExamTask { ExamId = examId, Title = title, Question = question, Type = (ExamTaskType)type, OptionsJson = optionsJson, CorrectAnswersJson = correctJson, ImageUrl = imageUrl, OrderIndex = await _context.ExamTasks.CountAsync(t => t.ExamId == examId) };
         _context.ExamTasks.Add(task);
         await _context.SaveChangesAsync();
         await LogAudit("Create", "ExamTask", task.Id, $"Задание добавлено в экзамен {examId}");
@@ -696,238 +618,110 @@ public class AdminController : Controller
         if (task != null) { _context.ExamTasks.Remove(task); await _context.SaveChangesAsync(); }
         return RedirectToAction(nameof(ManageExamTasks), new { examId });
     }
-   [HttpPost]
-public async Task<IActionResult> UpdateExamSettings(int examId, string title, string description, int timeLimitMinutes, bool shuffleQuestions)
-{
-    var exam = await _context.Exams.FindAsync(examId);
-    if (exam == null) return NotFound();
-    
-    exam.Title = title;
-    exam.Description = description;
-    exam.TimeLimitMinutes = Math.Min(timeLimitMinutes, 180);
-    exam.ShuffleQuestions = shuffleQuestions;
-    
-    await _context.SaveChangesAsync();
-    TempData["Success"] = "Настройки сохранены";
-    return RedirectToAction(nameof(ManageExamTasks), new { examId });
-}
-    public async Task<IActionResult> ReviewExams(bool showAll = false)
-{
-    var query = _context.ExamSubmissions
-        .Include(s => s.User)
-        .Include(s => s.Exam)
-            .ThenInclude(e => e.Tasks)
-        .AsQueryable();
 
-    if (!showAll)
-        query = query.Where(s => s.Score == null);
-
-    var submissions = await query
-        .OrderByDescending(s => s.SubmittedAt)
-        .ToListAsync();
-
-    ViewBag.ShowAll = showAll;
-    return View(submissions);
-}
     [HttpPost]
-public async Task<IActionResult> ReviewExamSubmission(int submissionId, int score, string? comment)
-{
-    var submission = await _context.ExamSubmissions.FindAsync(submissionId);
-    if (submission == null) return NotFound();
-
-    var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
-
-    // Ограничение 0-100
-    submission.Score = Math.Clamp(score, 0, 100);
-    submission.AdminComment = comment;
-    submission.ReviewedAt = DateTime.UtcNow;
-    submission.ReviewedByUserId = adminId;
-
-    await _context.SaveChangesAsync();
-    await LogAudit("Update", "ExamSubmission", submissionId, $"Оценка: {submission.Score}");
-
-    TempData["Success"] = "Оценка выставлена";
-    return RedirectToAction(nameof(ReviewExams));
-}
-public async Task<IActionResult> ExportExamResults(int examId)
-{
-    var exam = await _context.Exams
-        .Include(e => e.Tasks)
-        .FirstOrDefaultAsync(e => e.Id == examId);
-    
-    if (exam == null) return NotFound();
-
-    var submissions = await _context.ExamSubmissions
-        .Include(s => s.User)
-        .Where(s => s.ExamId == examId)
-        .OrderByDescending(s => s.SubmittedAt)
-        .ToListAsync();
-
-    using var workbook = new ClosedXML.Excel.XLWorkbook();
-    var sheetName = $"Экзамен {exam.Title}"
-    .Replace(":", "")
-    .Replace("\\", "")
-    .Replace("/", "")
-    .Replace("?", "")
-    .Replace("*", "")
-    .Replace("[", "")
-    .Replace("]", "");
-    
-if (sheetName.Length > 31) sheetName = sheetName.Substring(0, 31);
-
-var ws = workbook.Worksheets.Add(sheetName);
-
-    // Заголовок
-    ws.Cell(1, 1).Value = $"Результаты экзамена: {exam.Title}";
-    ws.Cell(1, 1).Style.Font.Bold = true;
-    ws.Cell(1, 1).Style.Font.FontSize = 14;
-    ws.Range(1, 1, 1, 7).Merge();
-
-    ws.Cell(2, 1).Value = $"Дата выгрузки: {DateTime.Now:dd.MM.yyyy HH:mm}";
-    ws.Cell(2, 1).Style.Font.FontSize = 10;
-    ws.Range(2, 1, 2, 7).Merge();
-
-    // Заголовки таблицы
-    var headers = new[] { "№", "Сотрудник", "Логин", "Дата сдачи", "Оценка", "Статус", "Комментарий" };
-    for (int i = 0; i < headers.Length; i++)
+    public async Task<IActionResult> UpdateExamSettings(int examId, string title, string description, int timeLimitMinutes, bool shuffleQuestions)
     {
-        ws.Cell(4, i + 1).Value = headers[i];
-        ws.Cell(4, i + 1).Style.Font.Bold = true;
-        ws.Cell(4, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray;
-        ws.Cell(4, i + 1).Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        var exam = await _context.Exams.FindAsync(examId);
+        if (exam == null) return NotFound();
+        exam.Title = title; exam.Description = description;
+        exam.TimeLimitMinutes = Math.Min(timeLimitMinutes, 180);
+        exam.ShuffleQuestions = shuffleQuestions;
+        await _context.SaveChangesAsync();
+        TempData["Success"] = "Настройки сохранены";
+        return RedirectToAction(nameof(ManageExamTasks), new { examId });
     }
 
-    // Данные
-    int row = 5;
-    foreach (var sub in submissions)
+    public async Task<IActionResult> ReviewExams(bool showAll = false)
     {
-        ws.Cell(row, 1).Value = row - 4;
-        ws.Cell(row, 2).Value = sub.User?.FullName ?? "—";
-        ws.Cell(row, 3).Value = sub.User?.Username ?? "—";
-        ws.Cell(row, 4).Value = sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
-        ws.Cell(row, 5).Value = sub.Score?.ToString() ?? "—";
-        ws.Cell(row, 6).Value = sub.Score == null ? "На проверке" : "Проверено";
-        ws.Cell(row, 7).Value = sub.AdminComment ?? "";
+        var query = _context.ExamSubmissions.Include(s => s.User).Include(s => s.Exam).ThenInclude(e => e.Tasks).AsQueryable();
+        if (!showAll) query = query.Where(s => s.Score == null);
+        ViewBag.ShowAll = showAll;
+        return View(await query.OrderByDescending(s => s.SubmittedAt).ToListAsync());
+    }
 
-        // Цвет строки по статусу
-        if (sub.Score == null)
+    [HttpPost]
+    public async Task<IActionResult> ReviewExamSubmission(int submissionId, int score, string? comment)
+    {
+        var submission = await _context.ExamSubmissions.FindAsync(submissionId);
+        if (submission == null) return NotFound();
+        var adminId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
+        submission.Score = Math.Clamp(score, 0, 100);
+        submission.AdminComment = comment;
+        submission.ReviewedAt = DateTime.UtcNow;
+        submission.ReviewedByUserId = adminId;
+        await _context.SaveChangesAsync();
+        await LogAudit("Update", "ExamSubmission", submissionId, $"Оценка: {submission.Score}");
+        TempData["Success"] = "Оценка выставлена";
+        return RedirectToAction(nameof(ReviewExams));
+    }
+
+    #endregion
+
+    #region Экспорт в Excel
+
+    public async Task<IActionResult> ExportExamResults(int examId)
+    {
+        var exam = await _context.Exams.Include(e => e.Tasks).FirstOrDefaultAsync(e => e.Id == examId);
+        if (exam == null) return NotFound();
+        var submissions = await _context.ExamSubmissions.Include(s => s.User).Where(s => s.ExamId == examId).OrderByDescending(s => s.SubmittedAt).ToListAsync();
+        using var workbook = new XLWorkbook();
+        var sheetName = $"Экзамен {exam.Title}".Replace(":", "").Replace("\\", "").Replace("/", "").Replace("?", "").Replace("*", "").Replace("[", "").Replace("]", "");
+        if (sheetName.Length > 31) sheetName = sheetName.Substring(0, 31);
+        var ws = workbook.Worksheets.Add(sheetName);
+        ws.Cell(1, 1).Value = $"Результаты экзамена: {exam.Title}"; ws.Cell(1, 1).Style.Font.Bold = true; ws.Cell(1, 1).Style.Font.FontSize = 14; ws.Range(1, 1, 1, 7).Merge();
+        ws.Cell(2, 1).Value = $"Дата выгрузки: {DateTime.Now:dd.MM.yyyy HH:mm}"; ws.Range(2, 1, 2, 7).Merge();
+        var headers = new[] { "№", "Сотрудник", "Логин", "Дата сдачи", "Оценка", "Статус", "Комментарий" };
+        for (int i = 0; i < headers.Length; i++) { ws.Cell(4, i + 1).Value = headers[i]; ws.Cell(4, i + 1).Style.Font.Bold = true; ws.Cell(4, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray; ws.Cell(4, i + 1).Style.Border.OutsideBorder = XLBorderStyleValues.Thin; }
+        int row = 5;
+        foreach (var sub in submissions)
         {
-            ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightYellow;
+            ws.Cell(row, 1).Value = row - 4; ws.Cell(row, 2).Value = sub.User?.FullName ?? "—"; ws.Cell(row, 3).Value = sub.User?.Username ?? "—";
+            ws.Cell(row, 4).Value = sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"); ws.Cell(row, 5).Value = sub.Score?.ToString() ?? "—";
+            ws.Cell(row, 6).Value = sub.Score == null ? "На проверке" : "Проверено"; ws.Cell(row, 7).Value = sub.AdminComment ?? "";
+            if (sub.Score == null) ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightYellow;
+            else if (sub.Score >= 80) ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightGreen;
+            else ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightSalmon;
+            row++;
         }
-        else if (sub.Score >= 80)
-        {
-            ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightGreen;
-        }
-        else
-        {
-            ws.Range(row, 1, row, 7).Style.Fill.BackgroundColor = XLColor.LightSalmon;
-        }
-
-        row++;
+        row += 2; ws.Cell(row, 1).Value = "Статистика:"; ws.Cell(row, 1).Style.Font.Bold = true; row++;
+        ws.Cell(row, 1).Value = "Всего сдач:"; ws.Cell(row, 2).Value = submissions.Count; row++;
+        ws.Cell(row, 1).Value = "Проверено:"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score != null); row++;
+        ws.Cell(row, 1).Value = "Средний балл:"; ws.Cell(row, 2).Value = submissions.Any(s => s.Score != null) ? (int)submissions.Where(s => s.Score != null).Average(s => s.Score!.Value) : "—"; row++;
+        ws.Cell(row, 1).Value = "Сдано успешно (≥80):"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score >= 80);
+        ws.Columns().AdjustToContents();
+        using var stream = new MemoryStream(); workbook.SaveAs(stream); stream.Position = 0;
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Экзамен_{exam.Title}_{DateTime.Now:yyyyMMdd}.xlsx");
     }
 
-    // Статистика
-    row += 2;
-    ws.Cell(row, 1).Value = "Статистика:";
-    ws.Cell(row, 1).Style.Font.Bold = true;
-    row++;
-    ws.Cell(row, 1).Value = "Всего сдач:";
-    ws.Cell(row, 2).Value = submissions.Count;
-    row++;
-    ws.Cell(row, 1).Value = "Проверено:";
-    ws.Cell(row, 2).Value = submissions.Count(s => s.Score != null);
-    row++;
-    ws.Cell(row, 1).Value = "Средний балл:";
-    ws.Cell(row, 2).Value = submissions.Any(s => s.Score != null) 
-        ? (int)submissions.Where(s => s.Score != null).Average(s => s.Score!.Value) 
-        : "—";
-    row++;
-    ws.Cell(row, 1).Value = "Сдано успешно (≥80):";
-    ws.Cell(row, 2).Value = submissions.Count(s => s.Score >= 80);
-
-    // Автоширина
-    ws.Columns().AdjustToContents();
-
-    using var stream = new MemoryStream();
-    workbook.SaveAs(stream);
-    stream.Position = 0;
-
-    var fileName = $"Экзамен_{exam.Title}_{DateTime.Now:yyyyMMdd}.xlsx";
-    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
-}
-// Экспорт всех результатов экзаменов в Excel
-public async Task<IActionResult> ExportAllExamResults()
-{
-    var submissions = await _context.ExamSubmissions
-        .Include(s => s.Exam)
-        .Include(s => s.User)
-        .OrderBy(s => s.Exam!.Title)
-        .ThenByDescending(s => s.SubmittedAt)
-        .ToListAsync();
-
-    using var workbook = new ClosedXML.Excel.XLWorkbook();
-    var ws = workbook.Worksheets.Add("Все экзамены");
-
-    // Заголовок
-    ws.Cell(1, 1).Value = "Результаты всех экзаменов";
-    ws.Cell(1, 1).Style.Font.Bold = true;
-    ws.Cell(1, 1).Style.Font.FontSize = 14;
-    ws.Range(1, 1, 1, 8).Merge();
-
-    ws.Cell(2, 1).Value = $"Дата выгрузки: {DateTime.Now:dd.MM.yyyy HH:mm}";
-    ws.Range(2, 1, 2, 8).Merge();
-
-    // Заголовки таблицы
-    var headers = new[] { "№", "Экзамен", "Сотрудник", "Логин", "Дата сдачи", "Оценка", "Статус", "Комментарий" };
-    for (int i = 0; i < headers.Length; i++)
+    public async Task<IActionResult> ExportAllExamResults()
     {
-        ws.Cell(4, i + 1).Value = headers[i];
-        ws.Cell(4, i + 1).Style.Font.Bold = true;
-        ws.Cell(4, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray;
+        var submissions = await _context.ExamSubmissions.Include(s => s.Exam).Include(s => s.User).OrderBy(s => s.Exam!.Title).ThenByDescending(s => s.SubmittedAt).ToListAsync();
+        using var workbook = new XLWorkbook();
+        var ws = workbook.Worksheets.Add("Все экзамены");
+        ws.Cell(1, 1).Value = "Результаты всех экзаменов"; ws.Cell(1, 1).Style.Font.Bold = true; ws.Cell(1, 1).Style.Font.FontSize = 14; ws.Range(1, 1, 1, 8).Merge();
+        ws.Cell(2, 1).Value = $"Дата выгрузки: {DateTime.Now:dd.MM.yyyy HH:mm}"; ws.Range(2, 1, 2, 8).Merge();
+        var headers = new[] { "№", "Экзамен", "Сотрудник", "Логин", "Дата сдачи", "Оценка", "Статус", "Комментарий" };
+        for (int i = 0; i < headers.Length; i++) { ws.Cell(4, i + 1).Value = headers[i]; ws.Cell(4, i + 1).Style.Font.Bold = true; ws.Cell(4, i + 1).Style.Fill.BackgroundColor = XLColor.LightGray; }
+        int row = 5;
+        foreach (var sub in submissions)
+        {
+            ws.Cell(row, 1).Value = row - 4; ws.Cell(row, 2).Value = sub.Exam?.Title ?? "—"; ws.Cell(row, 3).Value = sub.User?.FullName ?? "—"; ws.Cell(row, 4).Value = sub.User?.Username ?? "—";
+            ws.Cell(row, 5).Value = sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"); ws.Cell(row, 6).Value = sub.Score?.ToString() ?? "—";
+            ws.Cell(row, 7).Value = sub.Score == null ? "На проверке" : "Проверено"; ws.Cell(row, 8).Value = sub.AdminComment ?? "";
+            if (sub.Score == null) ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightYellow;
+            else if (sub.Score >= 80) ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightGreen;
+            else ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightSalmon;
+            row++;
+        }
+        row += 2; ws.Cell(row, 1).Value = "Итого сдач:"; ws.Cell(row, 2).Value = submissions.Count; row++;
+        ws.Cell(row, 1).Value = "Проверено:"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score != null); row++;
+        ws.Cell(row, 1).Value = "Средний балл:"; ws.Cell(row, 2).Value = submissions.Any(s => s.Score != null) ? (int)submissions.Where(s => s.Score != null).Average(s => s.Score!.Value) : 0; row++;
+        ws.Cell(row, 1).Value = "Успешно (≥80):"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score >= 80);
+        ws.Columns().AdjustToContents();
+        using var stream = new MemoryStream(); workbook.SaveAs(stream); stream.Position = 0;
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Все_экзамены_{DateTime.Now:yyyyMMdd}.xlsx");
     }
 
-    // Данные
-    int row = 5;
-    foreach (var sub in submissions)
-    {
-        ws.Cell(row, 1).Value = row - 4;
-        ws.Cell(row, 2).Value = sub.Exam?.Title ?? "—";
-        ws.Cell(row, 3).Value = sub.User?.FullName ?? "—";
-        ws.Cell(row, 4).Value = sub.User?.Username ?? "—";
-        ws.Cell(row, 5).Value = sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm");
-        ws.Cell(row, 6).Value = sub.Score?.ToString() ?? "—";
-        ws.Cell(row, 7).Value = sub.Score == null ? "На проверке" : "Проверено";
-        ws.Cell(row, 8).Value = sub.AdminComment ?? "";
-
-        if (sub.Score == null)
-            ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightYellow;
-        else if (sub.Score >= 80)
-            ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightGreen;
-        else
-            ws.Range(row, 1, row, 8).Style.Fill.BackgroundColor = XLColor.LightSalmon;
-
-        row++;
-    }
-
-    // Итоги
-    row += 2;
-    ws.Cell(row, 1).Value = "Итого сдач:"; ws.Cell(row, 2).Value = submissions.Count;
-    row++;
-    ws.Cell(row, 1).Value = "Проверено:"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score != null);
-    row++;
-    ws.Cell(row, 1).Value = "Средний балл:"; 
-    ws.Cell(row, 2).Value = submissions.Any(s => s.Score != null) 
-        ? (int)submissions.Where(s => s.Score != null).Average(s => s.Score!.Value) : 0;
-    row++;
-    ws.Cell(row, 1).Value = "Успешно (≥80):"; ws.Cell(row, 2).Value = submissions.Count(s => s.Score >= 80);
-
-    ws.Columns().AdjustToContents();
-
-    using var stream = new MemoryStream();
-    workbook.SaveAs(stream);
-    stream.Position = 0;
-
-    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
-                $"Все_экзамены_{DateTime.Now:yyyyMMdd}.xlsx");
-}
+    #endregion
 }

@@ -11,135 +11,62 @@
     .option-btn.selected { border-color: #3498db !important; background: rgba(52,152,219,0.1) !important; }
     .option-btn.correct { border-color: #27ae60 !important; background: rgba(39,174,96,0.15) !important; color: #27ae60 !important; }
     .option-btn.wrong { border-color: #e74c3c !important; background: rgba(231,76,60,0.1) !important; color: #e74c3c !important; }
-    .form-input { border-radius: 10px; }
     .form-input.correct-input { border-color: #27ae60 !important; background: rgba(39,174,96,0.08) !important; }
     .form-input.wrong-input { border-color: #e74c3c !important; background: rgba(231,76,60,0.06) !important; }
 </style>
 
 <div class="container mt-4">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/Simulator">Тренажёр</a></li>
-            <li class="breadcrumb-item active">@Model.Title</li>
-        </ol>
-    </nav>
-
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="/Simulator">Тренажёр</a></li><li class="breadcrumb-item active">@Model.Title</li></ol></nav>
     <h2>@Model.Title</h2>
-    @if (!string.IsNullOrEmpty(Model.Description))
-    {
-        <p class="text-muted">@Model.Description</p>
-    }
+    @if (!string.IsNullOrEmpty(Model.Description)) { <p class="text-muted">@Model.Description</p> }
 
     @foreach (var task in Model.Tasks.OrderBy(t => t.CreatedAt))
     {
-        var options = task.Type == TaskType.PhotoSingle || task.Type == TaskType.PhotoMultiple
-            ? task.AnswerJson.Split('|').Select(o => o.Trim()).OrderBy(_ => Guid.NewGuid()).ToList()
-            : new List<string>();
-        var correctAnswers = task.Type == TaskType.PhotoSingle || task.Type == TaskType.PhotoMultiple
-            ? task.Content.Split('|').Select(c => c.Trim()).ToList()
-            : new List<string>();
-        var isFree = task.Type == TaskType.PhotoFree;
-        var isSingle = task.Type == TaskType.PhotoSingle;
-        var isMultiple = task.Type == TaskType.PhotoMultiple;
-        var isForm = task.Type == TaskType.FormTask;
+        var options = task.Type is TaskType.PhotoSingle or TaskType.PhotoMultiple ? task.AnswerJson.Split('|').Select(o => o.Trim()).OrderBy(_ => Guid.NewGuid()).ToList() : new List<string>();
+        var correctAnswers = task.Type is TaskType.PhotoSingle or TaskType.PhotoMultiple ? task.Content.Split('|').Select(c => c.Trim()).ToList() : new List<string>();
+        var isFree = task.Type == TaskType.PhotoFree; var isSingle = task.Type == TaskType.PhotoSingle;
+        var isMultiple = task.Type == TaskType.PhotoMultiple; var isForm = task.Type == TaskType.FormTask;
 
         <div class="card mb-4" id="task-@task.Id">
-            <div class="card-header d-flex justify-content-between
-                        @(isFree ? "bg-warning text-dark" : isSingle ? "bg-primary text-white" : isMultiple ? "bg-info text-dark" : "bg-secondary text-white")">
-                <span>
-                    @(isSingle ? "📷 ○ Один ответ" : isMultiple ? "📷 ☑️ Несколько" : isFree ? "📷 ✍️ Свободный" : "📝 Форма")
-                </span>
-                @if (!string.IsNullOrEmpty(task.Hint))
-                {
-                    <button class="btn btn-sm btn-light" onclick="toggleHint(@task.Id)" type="button">💡</button>
-                }
+            <div class="card-header d-flex justify-content-between @(isFree ? "bg-warning text-dark" : isSingle ? "bg-primary text-white" : isMultiple ? "bg-info text-dark" : "bg-secondary text-white")">
+                <span>@(isSingle ? "📷 ○ Один" : isMultiple ? "📷 ☑️ Несколько" : isFree ? "📷 ✍️ Свободный" : "📝 Форма")</span>
+                @if (!string.IsNullOrEmpty(task.Hint)) { <button class="btn btn-sm btn-light" onclick="toggleHint(@task.Id)" type="button">💡</button> }
             </div>
             <div class="card-body">
                 <h5>@task.Title</h5>
-
-                @if (!string.IsNullOrEmpty(task.Hint))
-                {
-                    <div class="alert alert-info mb-3" id="hint-@task.Id" style="display:none;">💡 @task.Hint</div>
-                }
-
-                @if (!string.IsNullOrEmpty(task.ImageUrl))
-                {
-                    <img src="@task.ImageUrl" class="img-fluid rounded mb-3" style="max-height:300px;" />
-                }
+                @if (!string.IsNullOrEmpty(task.Hint)) { <div class="alert alert-info mb-3" id="hint-@task.Id" style="display:none;">💡 @task.Hint</div> }
+                @if (!string.IsNullOrEmpty(task.ImageUrl)) { <img src="@task.ImageUrl" class="img-fluid rounded mb-3" style="max-height:300px;" /> }
 
                 @if (isSingle)
                 {
                     <p>@task.Content.Split('|')[0]</p>
-                    <div id="options-@task.Id" class="d-grid gap-2">
-                        @for (int i = 0; i < options.Count; i++)
-                        {
-                            <button class="btn btn-outline-secondary option-btn text-start"
-                                    onclick="selectSingle(@task.Id, this, @i, [@string.Join(",", correctAnswers.Select(c => options.IndexOf(c)))])">
-                                @options[i]
-                            </button>
-                        }
-                    </div>
+                    <div id="options-@task.Id" class="d-grid gap-2">@for (int i = 0; i < options.Count; i++) { <button class="btn btn-outline-secondary option-btn text-start" onclick="selectSingle(@task.Id,this,@i,[@string.Join(",",correctAnswers.Select(c=>options.IndexOf(c)))])">@options[i]</button> }</div>
                     <div id="result-@task.Id" class="mt-3" style="display:none;"></div>
                 }
                 else if (isMultiple)
                 {
                     <p>@task.Content.Split('|')[0]</p>
-                    <div id="options-@task.Id" class="d-grid gap-2">
-                        @for (int i = 0; i < options.Count; i++)
-                        {
-                            <button class="btn btn-outline-secondary option-btn text-start"
-                                    onclick="toggleMultiple(@task.Id, this, @i)" data-idx="@i">
-                                @options[i]
-                            </button>
-                        }
-                    </div>
-                    <button class="btn btn-success mt-2" onclick="checkMultiple(@task.Id, [@string.Join(",", correctAnswers.Select(c => options.IndexOf(c)))])">✅ Проверить</button>
+                    <div id="options-@task.Id" class="d-grid gap-2">@for (int i = 0; i < options.Count; i++) { <button class="btn btn-outline-secondary option-btn text-start" onclick="toggleMultiple(@task.Id,this,@i)" data-idx="@i">@options[i]</button> }</div>
+                    <button class="btn btn-success mt-2" onclick="checkMultiple(@task.Id,[@string.Join(",",correctAnswers.Select(c=>options.IndexOf(c)))])">✅ Проверить</button>
                     <button class="btn btn-outline-secondary mt-2" onclick="resetMultiple(@task.Id)">🔄 Сбросить</button>
                     <div id="result-@task.Id" class="mt-3" style="display:none;"></div>
                 }
                 else if (isFree)
                 {
-                    <p>@task.Content</p>
-                    <textarea id="free-@task.Id" class="form-control form-input" rows="3" placeholder="Ваш ответ..."></textarea>
-                    <div id="free-result-@task.Id" class="mt-2" style="display:none;">
-                        <p class="text-muted">💡 Ожидаемый ответ: <strong>@task.AnswerJson</strong></p>
-                    </div>
-                    <div class="mt-2">
-                        <button class="btn btn-outline-info btn-sm" onclick="toggleFreeHint(@task.Id)">👁️ Показать подсказку</button>
-                        <button class="btn btn-success btn-sm" onclick="markCorrect(@task.Id)">✅ Верно</button>
-                        <button class="btn btn-danger btn-sm" onclick="markWrong(@task.Id)">❌ Неверно</button>
-                    </div>
+                    <p>@task.Content</p><textarea id="free-@task.Id" class="form-control form-input" rows="3" placeholder="Ваш ответ..."></textarea>
+                    <div id="free-result-@task.Id" class="mt-2" style="display:none;"><p class="text-muted">💡 Ожидаемый ответ: <strong>@task.AnswerJson</strong></p></div>
+                    <div class="mt-2"><button class="btn btn-outline-info btn-sm" onclick="toggleFreeHint(@task.Id)">👁️ Подсказка</button><button class="btn btn-success btn-sm" onclick="markCorrect(@task.Id)">✅ Верно</button><button class="btn btn-danger btn-sm" onclick="markWrong(@task.Id)">❌ Неверно</button></div>
                 }
                 else if (isForm)
                 {
-                    Dictionary<string, string> fields = new();
-                    Dictionary<string, string> answers = new();
-                    try {
-                        fields = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(task.Content) ?? new();
-                        answers = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(task.AnswerJson) ?? new();
-                    } catch { }
-                    <div id="form-@task.Id">
-                        @foreach (var f in fields)
-                        {
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">@f.Key</label>
-                                <input type="text" class="form-control form-input" data-correct="@answers.GetValueOrDefault(f.Key, "")" placeholder="@f.Value" />
-                            </div>
-                        }
-                    </div>
+                    Dictionary<string,string> fields=new(),answers=new();
+                    try { fields = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,string>>(task.Content) ?? new(); answers = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,string>>(task.AnswerJson) ?? new(); } catch { }
+                    <div id="form-@task.Id">@foreach(var f in fields){<div class="mb-3"><label class="form-label fw-bold">@f.Key</label><input type="text" class="form-control form-input" data-correct="@answers.GetValueOrDefault(f.Key)" placeholder="@f.Value" /></div>}</div>
                     <button class="btn btn-success" onclick="checkForm(@task.Id)">✅ Проверить</button>
                     <div id="form-result-@task.Id" class="mt-3" style="display:none;"></div>
                 }
-
-                @if (!string.IsNullOrEmpty(task.Explanation))
-                {
-                    <div class="alert alert-success mt-3" id="explanation-@task.Id" style="display:none;">📖 @task.Explanation</div>
-                }
-
-                <button type="button" class="btn btn-outline-warning btn-sm mt-2" 
-                    onclick="openReport('Task', @task.Id, '@task.Title.Replace("'", "\\'")')">
-                    🚩 Репорт
-                </button>
+                @if (!string.IsNullOrEmpty(task.Explanation)) { <div class="alert alert-success mt-3" id="explanation-@task.Id" style="display:none;">📖 @task.Explanation</div> }
+                <button type="button" class="btn btn-outline-warning btn-sm mt-2" onclick="openReport('Task',@task.Id,'@task.Title.Replace("'","\\'")')">🚩 Репорт</button>
             </div>
         </div>
     }
@@ -147,92 +74,14 @@
 
 @section Scripts {
     <script>
-        function toggleHint(id) { var e = document.getElementById('hint-' + id); e.style.display = e.style.display === 'none' ? 'block' : 'none'; }
-
-        function selectSingle(taskId, btn, idx, correctIndexes) {
-            var allBtns = document.querySelectorAll('#options-' + taskId + ' .option-btn');
-            allBtns.forEach(b => { b.disabled = true; b.classList.remove('selected', 'correct', 'wrong'); });
-            btn.classList.add('selected');
-            var isCorrect = correctIndexes.includes(idx);
-            var resultDiv = document.getElementById('result-' + taskId);
-            if (isCorrect) {
-                btn.classList.add('correct');
-                resultDiv.innerHTML = '<span class="text-success fw-bold fs-5">✅ Правильно!</span>';
-                resultDiv.className = 'mt-3 alert alert-success';
-            } else {
-                btn.classList.add('wrong');
-                correctIndexes.forEach(i => allBtns[i].classList.add('correct'));
-                resultDiv.innerHTML = '<span class="text-danger fw-bold">❌ Неправильно.</span>';
-                resultDiv.className = 'mt-3 alert alert-danger';
-            }
-            resultDiv.style.display = 'block';
-            var expl = document.getElementById('explanation-' + taskId);
-            if (expl) expl.style.display = 'block';
-        }
-
-        function toggleMultiple(taskId, btn, idx) {
-            btn.classList.toggle('selected');
-        }
-
-        function checkMultiple(taskId, correctIndexes) {
-            var allBtns = document.querySelectorAll('#options-' + taskId + ' .option-btn');
-            var resultDiv = document.getElementById('result-' + taskId);
-            var selected = [];
-            allBtns.forEach((b, i) => { if (b.classList.contains('selected')) selected.push(i); });
-            allBtns.forEach(b => b.disabled = true);
-            var isCorrect = selected.sort().join(',') === correctIndexes.sort().join(',');
-            if (isCorrect) {
-                resultDiv.innerHTML = '<span class="text-success fw-bold fs-5">✅ Правильно!</span>';
-                resultDiv.className = 'mt-3 alert alert-success';
-            } else {
-                correctIndexes.forEach(i => allBtns[i].classList.add('correct'));
-                selected.forEach(i => { if (!correctIndexes.includes(i)) allBtns[i].classList.add('wrong'); });
-                resultDiv.innerHTML = '<span class="text-danger fw-bold">❌ Неправильно.</span>';
-                resultDiv.className = 'mt-3 alert alert-danger';
-            }
-            resultDiv.style.display = 'block';
-            var expl = document.getElementById('explanation-' + taskId);
-            if (expl) expl.style.display = 'block';
-        }
-
-        function resetMultiple(taskId) {
-            var allBtns = document.querySelectorAll('#options-' + taskId + ' .option-btn');
-            allBtns.forEach(b => { b.classList.remove('selected', 'correct', 'wrong'); b.disabled = false; });
-            document.getElementById('result-' + taskId).style.display = 'none';
-            var expl = document.getElementById('explanation-' + taskId);
-            if (expl) expl.style.display = 'none';
-        }
-
-        function toggleFreeHint(taskId) {
-            var el = document.getElementById('free-result-' + taskId);
-            el.style.display = el.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function markCorrect(taskId) {
-            alert('✅ Вы отметили ответ как верный. Балл засчитан.');
-        }
-
-        function markWrong(taskId) {
-            alert('❌ Вы отметили ответ как неверный.');
-        }
-
-        function checkForm(taskId) {
-            var fields = document.querySelectorAll('#form-' + taskId + ' .form-input');
-            var resultDiv = document.getElementById('form-result-' + taskId);
-            var correct = 0, total = fields.length;
-            fields.forEach(f => {
-                var u = f.value.trim(), c = f.dataset.correct;
-                f.classList.remove('correct-input', 'wrong-input');
-                if (u.length === 0) return;
-                if (u.toLowerCase().includes(c.toLowerCase()) || c.toLowerCase().includes(u.toLowerCase())) { f.classList.add('correct-input'); correct++; }
-                else { f.classList.add('wrong-input'); f.title = 'Ожидалось: ' + c; }
-            });
-            var pct = Math.round((correct / total) * 100);
-            resultDiv.innerHTML = '<strong>Результат:</strong> ' + correct + ' из ' + total + ' (' + pct + '%).<br><small class="text-muted">Частичное совпадение.</small>';
-            resultDiv.className = 'mt-3 alert ' + (pct >= 70 ? 'alert-success' : 'alert-warning');
-            resultDiv.style.display = 'block';
-            var expl = document.getElementById('explanation-' + taskId);
-            if (expl) expl.style.display = 'block';
-        }
+        function toggleHint(id){var e=document.getElementById('hint-'+id);e.style.display=e.style.display==='none'?'block':'none';}
+        function selectSingle(tid,btn,idx,corr){var all=document.querySelectorAll('#options-'+tid+' .option-btn');all.forEach(b=>{b.disabled=true;b.classList.remove('selected','correct','wrong')});btn.classList.add('selected');var ok=corr.includes(idx),r=document.getElementById('result-'+tid);if(ok){btn.classList.add('correct');r.innerHTML='<span class="text-success fw-bold fs-5">✅ Правильно!</span>';r.className='mt-3 alert alert-success'}else{btn.classList.add('wrong');corr.forEach(i=>all[i].classList.add('correct'));r.innerHTML='<span class="text-danger fw-bold">❌ Неправильно.</span>';r.className='mt-3 alert alert-danger'}r.style.display='block';var e=document.getElementById('explanation-'+tid);if(e)e.style.display='block';}
+        function toggleMultiple(tid,btn,idx){btn.classList.toggle('selected');}
+        function checkMultiple(tid,corr){var all=document.querySelectorAll('#options-'+tid+' .option-btn'),r=document.getElementById('result-'+tid),sel=[];all.forEach((b,i)=>{if(b.classList.contains('selected'))sel.push(i)});all.forEach(b=>b.disabled=true);var ok=sel.sort().join(',')===corr.sort().join(',');if(ok){r.innerHTML='<span class="text-success fw-bold fs-5">✅ Правильно!</span>';r.className='mt-3 alert alert-success'}else{corr.forEach(i=>all[i].classList.add('correct'));sel.forEach(i=>{if(!corr.includes(i))all[i].classList.add('wrong')});r.innerHTML='<span class="text-danger fw-bold">❌ Неправильно.</span>';r.className='mt-3 alert alert-danger'}r.style.display='block';var e=document.getElementById('explanation-'+tid);if(e)e.style.display='block';}
+        function resetMultiple(tid){var all=document.querySelectorAll('#options-'+tid+' .option-btn');all.forEach(b=>{b.classList.remove('selected','correct','wrong');b.disabled=false});document.getElementById('result-'+tid).style.display='none';var e=document.getElementById('explanation-'+tid);if(e)e.style.display='none';}
+        function toggleFreeHint(tid){var e=document.getElementById('free-result-'+tid);e.style.display=e.style.display==='none'?'block':'none';}
+        function markCorrect(tid){alert('✅ Вы отметили ответ как верный.');}
+        function markWrong(tid){alert('❌ Вы отметили ответ как неверный.');}
+        function checkForm(tid){var f=document.querySelectorAll('#form-'+tid+' .form-input'),r=document.getElementById('form-result-'+tid),c=0,t=f.length;f.forEach(x=>{var u=x.value.trim(),a=x.dataset.correct;x.classList.remove('correct-input','wrong-input');if(!u)return;if(u.toLowerCase().includes(a.toLowerCase())||a.toLowerCase().includes(u.toLowerCase())){x.classList.add('correct-input');c++}else{x.classList.add('wrong-input');x.title='Ожидалось: '+a}});var p=Math.round((c/t)*100);r.innerHTML='<strong>Результат:</strong> '+c+' из '+t+' ('+p+'%).<br><small class="text-muted">Частичное совпадение.</small>';r.className='mt-3 alert '+(p>=70?'alert-success':'alert-warning');r.style.display='block';var e=document.getElementById('explanation-'+tid);if(e)e.style.display='block';}
     </script>
 }

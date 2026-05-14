@@ -7,17 +7,12 @@
 
 <div class="container mt-4">
     <h2>📋 Экзамены на проверку</h2>
-    <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
-    <a href="/Admin/ExportAllExamResults" class="btn btn-outline-success mb-3">📥 Скачать всё (Excel)</a>
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-
-    <div class="mb-3">
+    <div class="d-flex gap-2 mb-3">
+        <a href="/Admin" class="btn btn-outline-secondary">← Назад</a>
+        <a href="/Admin/ExportAllExamResults" class="btn btn-outline-success">📥 Скачать всё</a>
         @if (ViewBag.ShowAll != null && (bool)ViewBag.ShowAll)
         {
-            <a href="/Admin/ReviewExams" class="btn btn-outline-warning">🔍 Только непроверенные</a>
+            <a href="/Admin/ReviewExams" class="btn btn-outline-warning">🔍 Непроверенные</a>
         }
         else
         {
@@ -25,175 +20,88 @@
         }
     </div>
 
+    @if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
+
     @if (Model.Any())
     {
         <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Сотрудник</th>
-                    <th>Экзамен</th>
-                    <th>Дата</th>
-                    <th>Статус</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
+            <thead><tr><th>ID</th><th>Сотрудник</th><th>Экзамен</th><th>Дата</th><th>Статус</th><th></th></tr></thead>
             <tbody>
                 @foreach (var sub in Model)
                 {
                     <tr>
-                        <td>@sub.Id</td>
-                        <td>@(sub.User?.FullName ?? sub.User?.Username ?? "—")</td>
-                        <td>@(sub.Exam?.Title ?? "—")</td>
+                        <td>@sub.Id</td><td>@(sub.User?.FullName ?? sub.User?.Username ?? "—")</td><td>@(sub.Exam?.Title ?? "—")</td>
                         <td>@sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                        <td>
-                            @if (sub.Score == null)
-                            {
-                                <span class="badge bg-warning text-dark">⏳ На проверке</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success">✅ @sub.Score баллов</span>
-                            }
-                        </td>
-                        <td>
-                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" 
-                                    data-bs-target="#reviewModal@(sub.Id)">📝 Проверить</button>
-                        </td>
+                        <td>@(sub.Score == null ? Html.Raw("<span class=\"badge bg-warning text-dark\">⏳ На проверке</span>") : Html.Raw($"<span class=\"badge bg-success\">✅ {sub.Score} баллов</span>"))</td>
+                        <td><button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal@(sub.Id)">📝 Проверить</button></td>
                     </tr>
                 }
             </tbody>
         </table>
 
-        <!-- Модальные окна -->
         @foreach (var sub in Model)
         {
             var answers = new Dictionary<string, string>();
-            if (!string.IsNullOrEmpty(sub.AnswersJson))
-            {
-                try
-                {
-                    answers = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(sub.AnswersJson) ?? new();
-                }
-                catch { }
-            }
-
-            var tasks = sub.Exam?.Tasks.OrderBy(t => t.OrderIndex).ToList() ?? new List<ExamTask>();
+            if (!string.IsNullOrEmpty(sub.AnswersJson)) { try { answers = System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(sub.AnswersJson) ?? new(); } catch { } }
+            var tasks = sub.Exam?.Tasks.OrderBy(t => t.OrderIndex).ToList() ?? new();
 
             <div class="modal fade" id="reviewModal@(sub.Id)" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-xl">
                     <div class="modal-content">
                         <form method="post" action="/Admin/ReviewExamSubmission">
                             <input type="hidden" name="submissionId" value="@sub.Id" />
-                            <div class="modal-header">
-                                <h5>📝 Проверка: @sub.Exam?.Title</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
+                            <div class="modal-header"><h5>📝 Проверка: @(sub.Exam?.Title ?? "Экзамен")</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                             <div class="modal-body">
-                                <p><strong>Сотрудник:</strong> @(sub.User?.FullName ?? sub.User?.Username)</p>
-                                <p><strong>Дата сдачи:</strong> @sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p>
-                                <hr />
-
+                                <p><strong>Сотрудник:</strong> @(sub.User?.FullName ?? sub.User?.Username) | <strong>Дата:</strong> @sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</p><hr />
                                 @foreach (var task in tasks)
                                 {
                                     var userAnswerRaw = answers.GetValueOrDefault(task.Id.ToString(), "");
-                                    var options = string.IsNullOrEmpty(task.OptionsJson)
-                                        ? new List<string>()
-                                        : task.OptionsJson.Split('|').Select(o => o.Trim()).ToList();
-                                    var correctIndexes = string.IsNullOrEmpty(task.CorrectAnswersJson)
-                                        ? new List<int>()
-                                        : System.Text.Json.JsonSerializer.Deserialize<List<int>>(task.CorrectAnswersJson) ?? new List<int>();
+                                    var options = string.IsNullOrEmpty(task.OptionsJson) ? new() : task.OptionsJson.Split('|').Select(o => o.Trim()).ToList();
+                                    var correctIndexes = string.IsNullOrEmpty(task.CorrectAnswersJson) ? new() : System.Text.Json.JsonSerializer.Deserialize<List<int>>(task.CorrectAnswersJson) ?? new();
 
                                     <div class="card mb-3">
-                                        <div class="card-header d-flex justify-content-between">
-                                            <span>
-                                                <strong>@task.Title</strong>
-                                                <span class="badge bg-info ms-2">
-                                                    @(task.Type == ExamTaskType.Single ? "○ Один" : task.Type == ExamTaskType.Multiple ? "☑️ Несколько" : "✍️ Свободный")
-                                                </span>
-                                            </span>
-                                        </div>
+                                        <div class="card-header d-flex justify-content-between"><span><strong>@task.Title</strong><span class="badge bg-info ms-2">@(task.Type == ExamTaskType.Single ? "○" : task.Type == ExamTaskType.Multiple ? "☑️" : "✍️")</span></span></div>
                                         <div class="card-body">
                                             <p><strong>Вопрос:</strong> @task.Question</p>
-                                            @if (!string.IsNullOrEmpty(task.ImageUrl))
-                                            {
-                                                <img src="@task.ImageUrl" class="img-fluid rounded mb-2" style="max-height:200px;" />
-                                            }
-
+                                            @if (!string.IsNullOrEmpty(task.ImageUrl)) { <img src="@task.ImageUrl" class="img-fluid rounded mb-2" style="max-height:200px;" /> }
                                             @if (task.Type == ExamTaskType.Single)
                                             {
                                                 <p><strong>Варианты:</strong></p>
                                                 @for (int i = 0; i < options.Count; i++)
                                                 {
-                                                    var isCorrect = correctIndexes.Contains(i);
-                                                    var isUser = userAnswerRaw == i.ToString();
-                                                    <div class="mb-1">
-                                                        @if (isCorrect && isUser) { <span class="text-success fw-bold">✅ ▶ @options[i]</span> }
-                                                        else if (isCorrect && !isUser) { <span class="text-success">✅ @options[i]</span> }
-                                                        else if (!isCorrect && isUser) { <span class="text-danger fw-bold">❌ ▶ @options[i]</span> }
-                                                        else { <span class="text-muted">○ @options[i]</span> }
-                                                    </div>
+                                                    var isCorrect = correctIndexes.Contains(i); var isUser = userAnswerRaw == i.ToString();
+                                                    <div class="mb-1">@if (isCorrect && isUser) { <span class="text-success fw-bold">✅ ▶ @options[i]</span> } else if (isCorrect && !isUser) { <span class="text-success">✅ @options[i]</span> } else if (!isCorrect && isUser) { <span class="text-danger fw-bold">❌ ▶ @options[i]</span> } else { <span class="text-muted">○ @options[i]</span> }</div>
                                                 }
                                             }
                                             else if (task.Type == ExamTaskType.Multiple)
                                             {
                                                 <p><strong>Варианты:</strong></p>
-                                                var userIndexes = new List<int>();
-                                                if (!string.IsNullOrEmpty(userAnswerRaw))
-                                                {
-                                                    userIndexes = userAnswerRaw.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                                        .Select(x => int.TryParse(x.Trim(), out var i) ? i : -1)
-                                                        .Where(x => x >= 0).ToList();
-                                                }
+                                                var userIndexes = !string.IsNullOrEmpty(userAnswerRaw) ? userAnswerRaw.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => int.TryParse(x.Trim(), out var i) ? i : -1).Where(x => x >= 0).ToList() : new();
                                                 @for (int i = 0; i < options.Count; i++)
                                                 {
-                                                    var isCorrect = correctIndexes.Contains(i);
-                                                    var isUser = userIndexes.Contains(i);
-                                                    <div class="mb-1">
-                                                        @if (isCorrect && isUser) { <span class="text-success fw-bold">✅ ▶ @options[i]</span> }
-                                                        else if (isCorrect && !isUser) { <span class="text-success">✅ @options[i]</span> }
-                                                        else if (!isCorrect && isUser) { <span class="text-danger fw-bold">❌ ▶ @options[i]</span> }
-                                                        else { <span class="text-muted">○ @options[i]</span> }
-                                                    </div>
+                                                    var isCorrect = correctIndexes.Contains(i); var isUser = userIndexes.Contains(i);
+                                                    <div class="mb-1">@if (isCorrect && isUser) { <span class="text-success fw-bold">✅ ▶ @options[i]</span> } else if (isCorrect && !isUser) { <span class="text-success">✅ @options[i]</span> } else if (!isCorrect && isUser) { <span class="text-danger fw-bold">❌ ▶ @options[i]</span> } else { <span class="text-muted">○ @options[i]</span> }</div>
                                                 }
                                             }
                                             else
                                             {
-                                                <p><strong>Ответ сотрудника:</strong></p>
-                                                <div class="p-3 bg-light rounded border" style="white-space: pre-wrap;">@userAnswerRaw</div>
-                                                <p class="text-muted mt-1">✍️ Свободный ответ</p>
+                                                <p><strong>Ответ:</strong></p><div class="p-3 bg-light rounded border" style="white-space:pre-wrap;">@userAnswerRaw</div><p class="text-muted mt-1">✍️ Свободный ответ</p>
                                             }
                                         </div>
                                     </div>
                                 }
-
                                 <hr />
                                 <div class="row">
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Оценка (0-100)</label>
-                                        <input type="number" name="score" class="form-control" min="0" max="100" 
-       value="@(sub.Score ?? 0)" required 
-       oninput="if(this.value > 100) this.value = 100; if(this.value < 0) this.value = 0;" />
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <label class="form-label fw-bold">Комментарий</label>
-                                        <textarea name="comment" class="form-control" rows="2" 
-                                                  placeholder="Пояснение для сотрудника">@sub.AdminComment</textarea>
-                                    </div>
+                                    <div class="col-md-6 mb-3"><label class="form-label fw-bold">Оценка (0-100)</label><input type="number" name="score" class="form-control" min="0" max="100" value="@(sub.Score ?? 0)" required oninput="if(this.value>100)this.value=100;if(this.value<0)this.value=0;" /></div>
+                                    <div class="col-md-6 mb-3"><label class="form-label fw-bold">Комментарий</label><textarea name="comment" class="form-control" rows="2" placeholder="Пояснение">@sub.AdminComment</textarea></div>
                                 </div>
                             </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                                <button type="submit" class="btn btn-success">✅ Выставить оценку</button>
-                            </div>
+                            <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="submit" class="btn btn-success">✅ Выставить оценку</button></div>
                         </form>
                     </div>
                 </div>
             </div>
         }
     }
-    else
-    {
-        <div class="alert alert-info">Нет экзаменов на проверку.</div>
-    }
+    else { <div class="alert alert-info">Нет экзаменов на проверку.</div> }
 </div>

@@ -1,27 +1,20 @@
 @using System.Security.Claims
 @{
     ViewData["Title"] = "Результаты теста";
-    var questions = ViewBag.Questions as List<TestQuestionViewModel> ?? new List<TestQuestionViewModel>();
-    var userAnswers = ViewBag.UserAnswers as Dictionary<int, List<int>> ?? new Dictionary<int, List<int>>();
+    var questions = ViewBag.Questions as List<TestQuestionViewModel> ?? new();
+    var userAnswers = ViewBag.UserAnswers as Dictionary<int, List<int>> ?? new();
 }
 
 <div class="container mt-4">
     <div class="card text-center mb-4">
         <div class="card-body">
-            <h1 class="display-1">
-                @if (ViewBag.Percentage >= 80) { <text>🎉</text> }
-                else if (ViewBag.Percentage >= 50) { <text>📖</text> }
-                else { <text>💪</text> }
-            </h1>
+            <h1 class="display-1">@if (ViewBag.Percentage >= 80) { <text>🎉</text> } else if (ViewBag.Percentage >= 50) { <text>📖</text> } else { <text>💪</text> }</h1>
             <h2>Ваш результат</h2>
-            <div class="progress mb-3" style="height: 30px;">
-                <div class="progress-bar @(ViewBag.Percentage >= 80 ? "bg-success" : ViewBag.Percentage >= 50 ? "bg-warning" : "bg-danger")"
-                     style="width: @ViewBag.Percentage%;">@ViewBag.Percentage%</div>
-            </div>
+            <div class="progress mb-3" style="height:30px;"><div class="progress-bar @(ViewBag.Percentage >= 80 ? "bg-success" : ViewBag.Percentage >= 50 ? "bg-warning" : "bg-danger")" style="width:@ViewBag.Percentage%;">@ViewBag.Percentage%</div></div>
             <p class="lead">Правильных: <strong>@ViewBag.CorrectAnswers</strong> из <strong>@ViewBag.TotalQuestions</strong></p>
             <p class="text-muted">⏱️ @ViewBag.TimeSpent</p>
             <a href="/Test" class="btn btn-primary">К списку тестов</a>
-            <a href="/Test/MyStats" class="btn btn-outline-info">📊 Моя статистика</a>
+            <a href="/Test/MyStats" class="btn btn-outline-info">📊 Статистика</a>
         </div>
     </div>
 
@@ -30,32 +23,18 @@
     {
         var userAns = userAnswers.ContainsKey(q.Id) ? userAnswers[q.Id] : new List<int>();
         var isCorrect = userAns.OrderBy(x => x).SequenceEqual(q.CorrectIndexes.OrderBy(x => x));
-
         <div class="card mb-3 border @(isCorrect ? "border-success" : "border-danger")">
-            <div class="card-header @(isCorrect ? "bg-success text-white" : "bg-danger text-white")">
-                @(isCorrect ? "✅" : "❌") @q.Question
-            </div>
+            <div class="card-header @(isCorrect ? "bg-success text-white" : "bg-danger text-white")">@(isCorrect ? "✅" : "❌") @q.Question</div>
             <div class="card-body">
                 @for (int i = 0; i < q.Options.Count; i++)
                 {
-                    var isUser = userAns.Contains(i);
-                    var isRight = q.CorrectIndexes.Contains(i);
-                    string badge = "";
-                    string textClass = "";
-                    if (isRight && isUser) { badge = "✅"; textClass = "text-success fw-bold"; }
-                    else if (isRight && !isUser) { badge = "⬅️"; textClass = "text-success"; }
-                    else if (!isRight && isUser) { badge = "❌"; textClass = "text-danger fw-bold"; }
-                    else { badge = "○"; textClass = ""; }
-                    <div class="@textClass mb-1">@badge @q.Options[i]</div>
+                    var isUser = userAns.Contains(i); var isRight = q.CorrectIndexes.Contains(i);
+                    string badge = (isRight, isUser) switch { (true, true) => "✅", (true, false) => "⬅️", (false, true) => "❌", _ => "○" };
+                    string cls = (isRight, isUser) switch { (true, true) => "text-success fw-bold", (true, false) => "text-success", (false, true) => "text-danger fw-bold", _ => "" };
+                    <div class="@cls mb-1">@badge @q.Options[i]</div>
                 }
-                @if (!isCorrect && !string.IsNullOrEmpty(q.Explanation))
-                {
-                    <div class="alert alert-info mt-2">💡 <strong>Пояснение:</strong> @q.Explanation</div>
-                }
-                <button type="button" class="btn btn-outline-warning btn-sm mt-2" 
-                    onclick="openReport('Test', @q.Id, '@q.Question.Replace("'", "\\'")')">
-                    🚩 Репорт
-                </button>
+                @if (!isCorrect && !string.IsNullOrEmpty(q.Explanation)) { <div class="alert alert-info mt-2">💡 <strong>Пояснение:</strong> @q.Explanation</div> }
+                <button type="button" class="btn btn-outline-warning btn-sm mt-2" onclick="openReport('Test',@q.Id,'@q.Question.Replace("'","\\'")')">🚩 Репорт</button>
             </div>
         </div>
     }

@@ -2,27 +2,20 @@
 
 @{
     ViewData["Title"] = "Журнал действий";
-    var currentAction = ViewBag.Action as string;
+    var currentAction = ViewBag.LogAction as string;
     var currentEntityType = ViewBag.EntityType as string;
     var search = ViewBag.Search as string;
-    int currentPage = 1;
-int totalPages = 1;
-
-if (ViewBag.CurrentPage != null)
-    currentPage = Convert.ToInt32(ViewBag.CurrentPage);
-
-if (ViewBag.TotalPages != null)
-    totalPages = Convert.ToInt32(ViewBag.TotalPages);
+    int currentPage = ViewBag.CurrentPage != null ? Convert.ToInt32(ViewBag.CurrentPage) : 1;
+    int totalPages = ViewBag.TotalPages != null ? Convert.ToInt32(ViewBag.TotalPages) : 1;
 }
 
 <div class="container mt-4">
     <h2>📋 Журнал действий</h2>
     <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
 
-    <!-- Фильтры -->
     <form method="get" class="row mb-3">
         <div class="col-md-3 mb-2">
-            <select name="action" class="form-select" onchange="this.form.submit()">
+            <select name="logAction" class="form-select" onchange="this.form.submit()">
                 <option value="">Все действия</option>
                 <option value="Create" selected="@(currentAction == "Create")">Создание</option>
                 <option value="Update" selected="@(currentAction == "Update")">Изменение</option>
@@ -59,14 +52,7 @@ if (ViewBag.TotalPages != null)
 
     <table class="table table-striped table-sm">
         <thead>
-            <tr>
-                <th>ID</th>
-                <th>Дата / Время</th>
-                <th>Пользователь</th>
-                <th>Действие</th>
-                <th>Тип</th>
-                <th>Детали</th>
-            </tr>
+            <tr><th>ID</th><th>Дата / Время</th><th>Пользователь</th><th>Действие</th><th>Тип</th><th>Детали</th></tr>
         </thead>
         <tbody>
             @foreach (var log in Model)
@@ -78,24 +64,12 @@ if (ViewBag.TotalPages != null)
                     <td>
                         @switch (log.Action)
                         {
-                            case "Create":
-                                <span class="badge bg-success">Создание</span>
-                                break;
-                            case "Update":
-                                <span class="badge bg-warning text-dark">Изменение</span>
-                                break;
-                            case "Delete":
-                                <span class="badge bg-danger">Удаление</span>
-                                break;
-                            case "Login":
-                                <span class="badge bg-info">Вход</span>
-                                break;
-                            case "Logout":
-                                <span class="badge bg-secondary">Выход</span>
-                                break;
-                            default:
-                                <span class="badge bg-dark">@log.Action</span>
-                                break;
+                            case "Create": <span class="badge bg-success">Создание</span>; break;
+                            case "Update": <span class="badge bg-warning text-dark">Изменение</span>; break;
+                            case "Delete": <span class="badge bg-danger">Удаление</span>; break;
+                            case "Login": <span class="badge bg-info">Вход</span>; break;
+                            case "Logout": <span class="badge bg-secondary">Выход</span>; break;
+                            default: <span class="badge bg-dark">@log.Action</span>; break;
                         }
                     </td>
                     <td>@log.EntityType</td>
@@ -105,28 +79,21 @@ if (ViewBag.TotalPages != null)
         </tbody>
     </table>
 
-    <!-- Пагинация -->
     @if (totalPages > 1)
     {
         <nav>
             <ul class="pagination">
                 @if (currentPage > 1)
                 {
-                    <li class="page-item">
-                        <a class="page-link" href="/Admin/AuditLog?page=@(currentPage-1)&action=@currentAction&entityType=@currentEntityType&search=@search">←</a>
-                    </li>
+                    <li class="page-item"><a class="page-link" href="/Admin/AuditLog?page=@(currentPage-1)&logAction=@currentAction&entityType=@currentEntityType&search=@search">←</a></li>
                 }
                 @for (int i = 1; i <= totalPages; i++)
                 {
-                    <li class="page-item @(i == currentPage ? "active" : "")">
-                        <a class="page-link" href="/Admin/AuditLog?page=@i&action=@currentAction&entityType=@currentEntityType&search=@search">@i</a>
-                    </li>
+                    <li class="page-item @(i == currentPage ? "active" : "")"><a class="page-link" href="/Admin/AuditLog?page=@i&logAction=@currentAction&entityType=@currentEntityType&search=@search">@i</a></li>
                 }
                 @if (currentPage < totalPages)
                 {
-                    <li class="page-item">
-                        <a class="page-link" href="/Admin/AuditLog?page=@(currentPage+1)&action=@currentAction&entityType=@currentEntityType&search=@search">→</a>
-                    </li>
+                    <li class="page-item"><a class="page-link" href="/Admin/AuditLog?page=@(currentPage+1)&logAction=@currentAction&entityType=@currentEntityType&search=@search">→</a></li>
                 }
             </ul>
         </nav>

@@ -11,52 +11,19 @@
     @if (Model.Any())
     {
         <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Сотрудник</th>
-                    <th>Задание</th>
-                    <th>Дата</th>
-                    <th>Статус</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
+            <thead><tr><th>ID</th><th>Сотрудник</th><th>Задание</th><th>Дата</th><th>Статус</th><th></th></tr></thead>
             <tbody>
                 @foreach (var sub in Model)
                 {
                     <tr>
-                        <td>@sub.Id</td>
-                        <td>@(sub.User?.FullName ?? sub.User?.Username ?? "—")</td>
-                        <td>@(sub.Task?.Title ?? "—")</td>
+                        <td>@sub.Id</td><td>@(sub.User?.FullName ?? sub.User?.Username ?? "—")</td><td>@(sub.Task?.Title ?? "—")</td>
                         <td>@sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                        <td>
-                            @if (sub.Score == null)
-                            {
-                                <span class="badge bg-warning">⏳ На проверке</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success">✅ @sub.Score баллов</span>
-                            }
-                        </td>
-                        <td>
-                            @if (sub.Score == null)
-                            {
-                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" 
-                                        data-bs-target="#reviewModal@(sub.Id)">📝 Проверить</button>
-                            }
-                            else
-                            {
-                                <span class="text-muted">Проверено</span>
-                            }
-                        </td>
+                        <td>@(sub.Score == null ? Html.Raw("<span class=\"badge bg-warning\">⏳ На проверке</span>") : Html.Raw($"<span class=\"badge bg-success\">✅ {sub.Score} баллов</span>"))</td>
+                        <td>@(sub.Score == null ? Html.Raw($"<button class=\"btn btn-sm btn-primary\" data-bs-toggle=\"modal\" data-bs-target=\"#reviewModal{sub.Id}\">📝 Проверить</button>") : Html.Raw("<span class=\"text-muted\">Проверено</span>"))</td>
                     </tr>
                 }
             </tbody>
         </table>
     }
-    else
-    {
-        <div class="alert alert-info">Нет заданий на проверку.</div>
-    }
+    else { <div class="alert alert-info">Нет заданий на проверку.</div> }
 </div>

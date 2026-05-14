@@ -5,242 +5,46 @@
 }
 
 <style>
-    .stat-card {
-        border-radius: 16px;
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
-    }
-    .stat-card:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.12);
-    }
+    .stat-card { border-radius: 16px; transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.12); }
     .stat-icon { font-size: 2.5rem; }
     .stat-value { font-size: 2rem; font-weight: 700; }
     .stat-label { color: var(--text-muted); font-size: 0.9rem; }
     .warn-badge { animation: pulse 2s infinite; }
-    @@keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.6; }
-    }
+    @@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
 </style>
 
 <div class="container mt-4">
     <h2>📊 Дашборд</h2>
     <p class="text-muted">Общая статистика системы</p>
 
-    <!-- Карточки статистики -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card bg-primary text-white h-100">
-                <div class="card-body text-center">
-                    <div class="stat-icon">👥</div>
-                    <div class="stat-value">@ViewBag.TotalUsers</div>
-                    <div class="stat-label text-white-50">Пользователей (@ViewBag.ActiveUsers активно)</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card bg-success text-white h-100">
-                <div class="card-body text-center">
-                    <div class="stat-icon">📝</div>
-                    <div class="stat-value">@ViewBag.TotalTests</div>
-                    <div class="stat-label text-white-50">Тестов (@ViewBag.TotalQuestions вопросов)</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card bg-info text-white h-100">
-                <div class="card-body text-center">
-                    <div class="stat-icon">📋</div>
-                    <div class="stat-value">@ViewBag.TotalExams</div>
-                    <div class="stat-label text-white-50">Экзаменов</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card bg-warning text-dark h-100">
-                <div class="card-body text-center">
-                    <div class="stat-icon">📊</div>
-                    <div class="stat-value">@ViewBag.AvgScore%</div>
-                    <div class="stat-label">Средний балл</div>
-                </div>
-            </div>
-        </div>
+        <div class="col-md-3 mb-3"><div class="card stat-card bg-primary text-white h-100"><div class="card-body text-center"><div class="stat-icon">👥</div><div class="stat-value">@ViewBag.TotalUsers</div><div class="stat-label text-white-50">Пользователей (@ViewBag.ActiveUsers активно)</div></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card stat-card bg-success text-white h-100"><div class="card-body text-center"><div class="stat-icon">📝</div><div class="stat-value">@ViewBag.TotalTests</div><div class="stat-label text-white-50">Тестов (@ViewBag.TotalQuestions вопросов)</div></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card stat-card bg-info text-white h-100"><div class="card-body text-center"><div class="stat-icon">📋</div><div class="stat-value">@ViewBag.TotalExams</div><div class="stat-label text-white-50">Экзаменов</div></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card stat-card bg-warning text-dark h-100"><div class="card-body text-center"><div class="stat-icon">📊</div><div class="stat-value">@ViewBag.AvgScore%</div><div class="stat-label">Средний балл</div></div></div></div>
     </div>
 
-    <!-- Вторая строка -->
     <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card h-100">
-                <div class="card-body text-center">
-                    <div class="stat-icon">📖</div>
-                    <div class="stat-value">@ViewBag.TotalArticles</div>
-                    <div class="stat-label">Статей в справочнике</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <div class="card stat-card h-100">
-                <div class="card-body text-center">
-                    <div class="stat-icon">🔧</div>
-                    <div class="stat-value">@ViewBag.TotalTasks</div>
-                    <div class="stat-label">Заданий тренажёра</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="/Admin/Reports" class="text-decoration-none">
-                <div class="card stat-card h-100 @(ViewBag.PendingReports > 0 ? "border-danger" : "")">
-                    <div class="card-body text-center">
-                        <div class="stat-icon">🚩</div>
-                        <div class="stat-value @(ViewBag.PendingReports > 0 ? "text-danger" : "")">
-                            @ViewBag.PendingReports
-                        </div>
-                        <div class="stat-label">
-                            @if (ViewBag.PendingReports > 0) {
-                                <span class="badge bg-danger warn-badge">Требуют внимания</span>
-                            } else {
-                                <span>Новых репортов</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
-        <div class="col-md-3 mb-3">
-            <a href="/Admin/ReviewExams" class="text-decoration-none">
-                <div class="card stat-card h-100 @(ViewBag.PendingExams > 0 ? "border-warning" : "")">
-                    <div class="card-body text-center">
-                        <div class="stat-icon">📋</div>
-                        <div class="stat-value @(ViewBag.PendingExams > 0 ? "text-warning" : "")">
-                            @ViewBag.PendingExams
-                        </div>
-                        <div class="stat-label">
-                            @if (ViewBag.PendingExams > 0) {
-                                <span class="badge bg-warning text-dark warn-badge">На проверке</span>
-                            } else {
-                                <span>Экзаменов на проверке</span>
-                            }
-                        </div>
-                    </div>
-                </div>
-            </a>
-        </div>
+        <div class="col-md-3 mb-3"><div class="card stat-card h-100"><div class="card-body text-center"><div class="stat-icon">📖</div><div class="stat-value">@ViewBag.TotalArticles</div><div class="stat-label">Статей</div></div></div></div>
+        <div class="col-md-3 mb-3"><div class="card stat-card h-100"><div class="card-body text-center"><div class="stat-icon">🔧</div><div class="stat-value">@ViewBag.TotalTasks</div><div class="stat-label">Заданий</div></div></div></div>
+        <div class="col-md-3 mb-3"><a href="/Admin/Reports" class="text-decoration-none"><div class="card stat-card h-100 @(ViewBag.PendingReports > 0 ? "border-danger" : "")"><div class="card-body text-center"><div class="stat-icon">🚩</div><div class="stat-value @(ViewBag.PendingReports > 0 ? "text-danger" : "")">@ViewBag.PendingReports</div><div class="stat-label">@(ViewBag.PendingReports > 0 ? Html.Raw("<span class=\"badge bg-danger warn-badge\">Требуют внимания</span>") : Html.Raw("<span>Новых репортов</span>"))</div></div></div></a></div>
+        <div class="col-md-3 mb-3"><a href="/Admin/ReviewExams" class="text-decoration-none"><div class="card stat-card h-100 @(ViewBag.PendingExams > 0 ? "border-warning" : "")"><div class="card-body text-center"><div class="stat-icon">📋</div><div class="stat-value @(ViewBag.PendingExams > 0 ? "text-warning" : "")">@ViewBag.PendingExams</div><div class="stat-label">@(ViewBag.PendingExams > 0 ? Html.Raw("<span class=\"badge bg-warning text-dark warn-badge\">На проверке</span>") : Html.Raw("<span>Экзаменов на проверке</span>"))</div></div></div></a></div>
     </div>
+
     <h5 class="mt-4">⚡ Быстрые действия</h5>
-    
     <div class="row">
-        <!-- Тесты -->
-        <div class="col-md-3 mb-4">
-            <strong>📝 Тесты</strong>
-            <div class="d-grid gap-2 mt-2">
-                <a href="/Admin/Tests" class="btn btn-outline-primary">📋 Все тесты</a>
-                <a href="/Admin/CreateTest" class="btn btn-primary">+ Создать тест</a>
-            </div>
-        </div>
-
-        <!-- Экзамены -->
-        <div class="col-md-3 mb-4">
-            <strong>📋 Экзамены</strong>
-            <div class="d-grid gap-2 mt-2">
-                <a href="/Admin/Exams" class="btn btn-outline-info">📋 Все экзамены</a>
-                <a href="/Admin/ReviewExams" class="btn btn-info">📝 Проверка</a>
-            </div>
-        </div>
-
-        <!-- Тренажёр -->
-        <div class="col-md-3 mb-4">
-            <strong>🔧 Тренажёр</strong>
-            <div class="d-grid gap-2 mt-2">
-                <a href="/Admin/TaskGroups" class="btn btn-outline-success">📁 Все задания</a>
-                <a href="/Admin/CreateTask" class="btn btn-success">+ Создать задание</a>
-            </div>
-        </div>
-
-        <!-- Справочник -->
-        <div class="col-md-3 mb-4">
-            <strong>📖 Справочник</strong>
-            <div class="d-grid gap-2 mt-2">
-                <a href="/Admin/Articles" class="btn btn-outline-secondary">📋 Все статьи</a>
-                <a href="/Admin/CreateArticle" class="btn btn-secondary">+ Создать статью</a>
-            </div>
-        </div>
-
-        <!-- Пользователи -->
-        <div class="col-md-3 mb-4">
-            <strong>👥 Пользователи</strong>
-            <div class="d-grid gap-2 mt-2">
-                <a href="/Admin/Users" class="btn btn-outline-warning">👥 Управление</a>
-            </div>
-        </div>
-
-        <!-- Аналитика -->
-        <div class="col-md-3 mb-4">
-            <strong>📊 Аналитика</strong>
-            <div class="d-grid gap-2 mt-2">
-                <a href="/Admin/TestStats" class="btn btn-outline-info">📊 Статистика</a>
-                <a href="/Admin/Reports" class="btn btn-outline-danger">🚩 Репорты</a>
-                <a href="/Admin/AuditLog" class="btn btn-outline-secondary">📝 Журнал</a>
-            </div>
-        </div>
+        <div class="col-md-3 mb-4"><strong>📝 Тесты</strong><div class="d-grid gap-2 mt-2"><a href="/Admin/Tests" class="btn btn-outline-primary">📋 Все тесты</a><a href="/Admin/CreateTest" class="btn btn-primary">+ Создать тест</a></div></div>
+        <div class="col-md-3 mb-4"><strong>📋 Экзамены</strong><div class="d-grid gap-2 mt-2"><a href="/Admin/Exams" class="btn btn-outline-info">📋 Все экзамены</a><a href="/Admin/ReviewExams" class="btn btn-info">📝 Проверка</a></div></div>
+        <div class="col-md-3 mb-4"><strong>🔧 Тренажёр</strong><div class="d-grid gap-2 mt-2"><a href="/Admin/TaskGroups" class="btn btn-outline-success">📁 Все задания</a><a href="/Admin/CreateTask" class="btn btn-success">+ Создать задание</a></div></div>
+        <div class="col-md-3 mb-4"><strong>📖 Справочник</strong><div class="d-grid gap-2 mt-2"><a href="/Admin/Articles" class="btn btn-outline-secondary">📋 Все статьи</a><a href="/Admin/CreateArticle" class="btn btn-secondary">+ Создать статью</a></div></div>
+        <div class="col-md-3 mb-4"><strong>👥 Пользователи</strong><div class="d-grid gap-2 mt-2"><a href="/Admin/Users" class="btn btn-outline-warning">👥 Управление</a></div></div>
+        <div class="col-md-3 mb-4"><strong>📊 Аналитика</strong><div class="d-grid gap-2 mt-2"><a href="/Admin/TestStats" class="btn btn-outline-info">📊 Статистика</a><a href="/Admin/Reports" class="btn btn-outline-danger">🚩 Репорты</a><a href="/Admin/AuditLog" class="btn btn-outline-secondary">📝 Журнал</a></div></div>
     </div>
-    <div class="container mt-4">
-    <p class="text-muted">Общая статистика персонала</p>
-    <div class="row">
-        <!-- Последние результаты -->
-        <div class="col-md-6 mb-3">
-            <div class="card h-100">
-                <div class="card-header">🕐 Последние результаты тестов</div>
-                <div class="card-body p-0">
-                    @if (ViewBag.RecentResults != null)
-                    {
-                        <table class="table table-sm mb-0">
-                            <tbody>
-                                @foreach (var r in ViewBag.RecentResults)
-                                {
-                                    <tr>
-                                        <td>@(r.User?.FullName ?? r.User?.Username ?? "—")</td>
-                                        <td>@(r.Test?.Title ?? "—")</td>
-                                        <td>
-                                            <span class="badge @(r.Percentage >= 80 ? "bg-success" : r.Percentage >= 50 ? "bg-warning text-dark" : "bg-danger")">
-                                                @r.Percentage%
-                                            </span>
-                                        </td>
-                                        <td><small>@r.CompletedAt.ToLocalTime().ToString("dd.MM HH:mm")</small></td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    }
-                </div>
-            </div>
-        </div>
 
-        <!-- Топ сотрудников -->
-        <div class="col-md-6 mb-3">
-            <div class="card h-100">
-                <div class="card-header">🏆 Топ-5 сотрудников</div>
-                <div class="card-body p-0">
-                    @if (ViewBag.TopUsers != null)
-                    {
-                        <table class="table table-sm mb-0">
-                            <tbody>
-                                @{ int pos = 1; }
-                                @foreach (var u in ViewBag.TopUsers)
-                                {
-                                    <tr>
-                                        <td>@(pos == 1 ? "🥇" : pos == 2 ? "🥈" : pos == 3 ? "🥉" : $"#{pos}")</td>
-                                        <td>@(u.User?.FullName ?? u.User?.Username ?? "—")</td>
-                                        <td><strong>@u.AvgScore%</strong> средний</td>
-                                        <td>@u.TestsPassed тестов</td>
-                                    </tr>
-                                    pos++;
-                                }
-                            </tbody>
-                        </table>
-                    }
-                </div>
-            </div>
-        </div>
+    <h5 class="mt-3">📊 Статистика персонала</h5>
+    <div class="row">
+        <div class="col-md-6 mb-3"><div class="card h-100"><div class="card-header">🕐 Последние результаты</div><div class="card-body p-0">@if (ViewBag.RecentResults != null) { <table class="table table-sm mb-0"><tbody>@foreach (var r in ViewBag.RecentResults) { <tr><td>@(r.User?.FullName ?? r.User?.Username ?? "—")</td><td>@(r.Test?.Title ?? "—")</td><td><span class="badge @(r.Percentage >= 80 ? "bg-success" : r.Percentage >= 50 ? "bg-warning text-dark" : "bg-danger")">@r.Percentage%</span></td><td><small>@r.CompletedAt.ToLocalTime().ToString("dd.MM HH:mm")</small></td></tr> }</tbody></table> }</div></div></div>
+        <div class="col-md-6 mb-3"><div class="card h-100"><div class="card-header">🏆 Топ-5</div><div class="card-body p-0">@if (ViewBag.TopUsers != null) { int pos = 1; <table class="table table-sm mb-0"><tbody>@foreach (var u in ViewBag.TopUsers) { <tr><td>@(pos == 1 ? "🥇" : pos == 2 ? "🥈" : pos == 3 ? "🥉" : $"#{pos}")</td><td>@(u.User?.FullName ?? u.User?.Username ?? "—")</td><td><strong>@u.AvgScore%</strong></td><td>@u.TestsPassed тестов</td></tr> pos++; }</tbody></table> }</div></div></div>
     </div>
 </div>

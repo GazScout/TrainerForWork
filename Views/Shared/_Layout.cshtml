@@ -11,135 +11,44 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container">
             <a class="navbar-brand" href="/">📚 Тренажёр</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"><span class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 @if (User.Identity?.IsAuthenticated == true)
                 {
                     <ul class="navbar-nav">
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Handbook">📖 Справочник</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Test">📝 Тесты</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Simulator">🔧 Тренажёр</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Exam">📋 Экзамены</a>
-                        </li>
-                        @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin"))
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-warning" href="/Admin">⚙️ Админка</a>
-                            </li>
-                        }
+                        <li class="nav-item"><a class="nav-link" href="/Handbook">📖 Справочник</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Test">📝 Тесты</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Simulator">🔧 Тренажёр</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Exam">📋 Экзамены</a></li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("SuperAdmin")) { <li class="nav-item"><a class="nav-link text-warning" href="/Admin">⚙️ Админка</a></li> }
                     </ul>
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item d-flex align-items-center me-2">
-                            <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
-                                <span class="theme-icon">🌙</span>
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Profile">
-                                👤 @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Auth/Logout">🚪 Выйти</a>
-                        </li>
+                        <li class="nav-item d-flex align-items-center me-2"><button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему"><span class="theme-icon">🌙</span></button></li>
+                        <li class="nav-item"><a class="nav-link" href="/Profile">👤 @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Auth/Logout">🚪 Выйти</a></li>
                     </ul>
                 }
                 else
                 {
                     <ul class="navbar-nav ms-auto">
-                        <li class="nav-item d-flex align-items-center me-2">
-                            <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
-                                <span class="theme-icon">🌙</span>
-                            </button>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="/Auth/Login">🔐 Войти</a>
-                        </li>
+                        <li class="nav-item d-flex align-items-center me-2"><button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему"><span class="theme-icon">🌙</span></button></li>
+                        <li class="nav-item"><a class="nav-link" href="/Auth/Login">🔐 Войти</a></li>
                     </ul>
                 }
             </div>
         </div>
     </nav>
 
-    <main role="main" class="pb-3" style="padding-top: 70px;">
-        @RenderBody()
-    </main>
+    <main role="main" class="pb-3" style="padding-top: 70px;">@RenderBody()</main>
 
-    <!-- Модальное окно репорта -->
-    <div class="modal fade" id="reportModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form id="reportForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title">🚩 Сообщить об ошибке</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="reportEntityType" />
-                        <input type="hidden" id="reportEntityId" />
-                        <input type="hidden" id="reportEntityTitle" />
-                        <p id="reportEntityName" class="fw-bold"></p>
-                        <div class="mb-3">
-                            <label class="form-label">Что не так?</label>
-                            <textarea id="reportMessage" class="form-control" rows="3" 
-                                      placeholder="Опишите проблему..." required></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
-                        <button type="button" class="btn btn-warning" onclick="submitReport()">🚩 Отправить</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <div class="modal fade" id="reportModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><form id="reportForm"><div class="modal-header"><h5 class="modal-title">🚩 Сообщить об ошибке</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><input type="hidden" id="reportEntityType" /><input type="hidden" id="reportEntityId" /><input type="hidden" id="reportEntityTitle" /><p id="reportEntityName" class="fw-bold"></p><div class="mb-3"><label class="form-label">Что не так?</label><textarea id="reportMessage" class="form-control" rows="3" placeholder="Опишите проблему..." required></textarea></div></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button><button type="button" class="btn btn-warning" onclick="submitReport()">🚩 Отправить</button></div></form></div></div></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/js/theme.js"></script>
     <script>
-        function openReport(type, id, title) {
-            document.getElementById('reportEntityType').value = type;
-            document.getElementById('reportEntityId').value = id;
-            document.getElementById('reportEntityTitle').value = title;
-            document.getElementById('reportEntityName').textContent = title;
-            document.getElementById('reportMessage').value = '';
-            new bootstrap.Modal(document.getElementById('reportModal')).show();
-        }
-
-        function submitReport() {
-            var type = document.getElementById('reportEntityType').value;
-            var id = document.getElementById('reportEntityId').value;
-            var title = document.getElementById('reportEntityTitle').value;
-            var msg = document.getElementById('reportMessage').value;
-
-            if (!msg.trim()) { alert('Опишите проблему'); return; }
-
-            fetch('/Report/Submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: 'entityType=' + type + '&entityId=' + id + '&entityTitle=' + encodeURIComponent(title) + '&message=' + encodeURIComponent(msg)
-            })
-            .then(function(r) { return r.json(); })
-            .then(function(d) {
-                if (d.success) {
-                    alert('✅ Спасибо! Администратор проверит.');
-                    bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
-                } else {
-                    alert('❌ ' + d.error);
-                }
-            });
-        }
+        function openReport(type, id, title) { document.getElementById('reportEntityType').value = type; document.getElementById('reportEntityId').value = id; document.getElementById('reportEntityTitle').value = title; document.getElementById('reportEntityName').textContent = title; document.getElementById('reportMessage').value = ''; new bootstrap.Modal(document.getElementById('reportModal')).show(); }
+        function submitReport() { var t = document.getElementById('reportEntityType').value, i = document.getElementById('reportEntityId').value, tl = document.getElementById('reportEntityTitle').value, m = document.getElementById('reportMessage').value; if (!m.trim()) { alert('Опишите проблему'); return; } fetch('/Report/Submit', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'entityType=' + t + '&entityId=' + i + '&entityTitle=' + encodeURIComponent(tl) + '&message=' + encodeURIComponent(m) }).then(r => r.json()).then(d => { if (d.success) { alert('✅ Спасибо!'); bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide(); } else alert('❌ ' + d.error); }); }
     </script>
-
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

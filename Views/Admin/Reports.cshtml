@@ -12,71 +12,28 @@
     @if (Model.Any())
     {
         <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Отправитель</th>
-                    <th>Тип</th>
-                    <th>Объект</th>
-                    <th>Сообщение</th>
-                    <th>Статус</th>
-                    <th>В работе</th>
-                    <th>Дата</th>
-                    <th>Действия</th>
-                </tr>
-            </thead>
+            <thead><tr><th>ID</th><th>Отправитель</th><th>Тип</th><th>Объект</th><th>Сообщение</th><th>Статус</th><th>В работе</th><th>Дата</th><th>Действия</th></tr></thead>
             <tbody>
                 @foreach (var r in Model)
                 {
+                    var editLink = r.EntityType switch { "Test" => $"/Admin/ManageQuestions?testId={r.EntityId}", "Task" => $"/Admin/EditTask/{r.EntityId}", "Article" => $"/Admin/EditArticle/{r.EntityId}", _ => "#" };
+                    var previewLink = r.EntityType switch { "Test" => $"/Admin/PreviewTest/{r.EntityId}", "Article" => $"/Handbook/Details/{r.EntityId}", _ => null };
                     <tr>
-                        <td>@r.Id</td>
-                        <td>@(r.User?.Username ?? "—")</td>
-                        <td>@r.EntityType</td>
-                        <td>@r.EntityTitle</td>
+                        <td>@r.Id</td><td>@(r.User?.Username ?? "—")</td><td>@r.EntityType</td><td>@r.EntityTitle</td>
                         <td>@(r.Message.Length > 50 ? r.Message.Substring(0, 50) + "..." : r.Message)</td>
-                        <td>
-                            <span class="badge @(r.Status == ReportStatus.New ? "bg-danger" : r.Status == ReportStatus.InProgress ? "bg-warning text-dark" : "bg-success")">
-                                @(r.Status == ReportStatus.New ? "Новый" : r.Status == ReportStatus.InProgress ? "В работе" : "Решён")
-                            </span>
-                        </td>
-                        <td>
-                            @(r.ResolvedBy?.FullName ?? r.ResolvedBy?.Username ?? "—")
-                        </td>
+                        <td><span class="badge @(r.Status == ReportStatus.New ? "bg-danger" : r.Status == ReportStatus.InProgress ? "bg-warning text-dark" : "bg-success")">@(r.Status == ReportStatus.New ? "Новый" : r.Status == ReportStatus.InProgress ? "В работе" : "Решён")</span></td>
+                        <td>@(r.ResolvedBy?.FullName ?? r.ResolvedBy?.Username ?? "—")</td>
                         <td>@r.CreatedAt.ToLocalTime().ToString("dd.MM HH:mm")</td>
                         <td>
                             <div class="d-flex gap-1">
-                                @{
-                                    var editLink = r.EntityType switch
-                                    {
-                                        "Test" => $"/Admin/ManageQuestions?testId={r.EntityId}",
-                                        "Task" => $"/Admin/EditTask/{r.EntityId}",
-                                        "Article" => $"/Admin/EditArticle/{r.EntityId}",
-                                        _ => "#"
-                                    };
-                                    var previewLink = r.EntityType switch
-                                    {
-                                        "Test" => $"/Admin/PreviewTest/{r.EntityId}",
-                                        "Article" => $"/Handbook/Details/{r.EntityId}",
-                                        _ => null
-                                    };
-                                }
-                                
                                 <a href="@editLink" class="btn btn-sm btn-primary" title="Редактировать">✏️</a>
-                                
-                                @if (previewLink != null)
-                                {
-                                    <a href="@previewLink" class="btn btn-sm btn-outline-info" target="_blank" title="Предпросмотр">👁️</a>
-                                }
-                                
+                                @if (previewLink != null) { <a href="@previewLink" class="btn btn-sm btn-outline-info" target="_blank" title="Предпросмотр">👁️</a> }
                                 @if (r.Status != ReportStatus.Resolved)
                                 {
                                     <form method="post" action="/Admin/UpdateReportStatus" style="display:inline">
                                         <input type="hidden" name="reportId" value="@r.Id" />
                                         <input type="hidden" name="status" value="@(r.Status == ReportStatus.New ? "InProgress" : "Resolved")" />
-                                        <button class="btn btn-sm @(r.Status == ReportStatus.New ? "btn-warning" : "btn-success")"
-                                                title="@(r.Status == ReportStatus.New ? "Взять в работу" : "Отметить решённым")">
-                                            @(r.Status == ReportStatus.New ? "🔧" : "✅")
-                                        </button>
+                                        <button class="btn btn-sm @(r.Status == ReportStatus.New ? "btn-warning" : "btn-success")" title="@(r.Status == ReportStatus.New ? "Взять в работу" : "Решить")">@(r.Status == ReportStatus.New ? "🔧" : "✅")</button>
                                     </form>
                                 }
                             </div>
@@ -86,8 +43,5 @@
             </tbody>
         </table>
     }
-    else
-    {
-        <div class="alert alert-info">Репортов пока нет.</div>
-    }
+    else { <div class="alert alert-info">Репортов пока нет.</div> }
 </div>

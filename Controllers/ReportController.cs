@@ -25,7 +25,7 @@ public class ReportController : Controller
 
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        var report = new Report
+        _context.Reports.Add(new Report
         {
             UserId = userId,
             EntityType = entityType,
@@ -33,11 +33,9 @@ public class ReportController : Controller
             EntityTitle = entityTitle,
             Message = message,
             CreatedAt = DateTime.UtcNow
-        };
+        });
 
-        _context.Reports.Add(report);
         await _context.SaveChangesAsync();
-
         return Json(new { success = true });
     }
 }

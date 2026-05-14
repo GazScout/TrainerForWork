@@ -1,5 +1,4 @@
 @model List<EmployeeTrainer.Models.TaskGroup>
-@using EmployeeTrainer.Models
 
 @{
     ViewData["Title"] = "Тренажёр";
@@ -7,7 +6,6 @@
 
 <div class="container mt-4">
     <h2 class="mb-4">🔧 Тренажёр</h2>
-
     @if (Model.Any())
     {
         <div class="row">
@@ -15,24 +13,12 @@
             {
                 <div class="col-md-6 mb-3">
                     <div class="card h-100">
-                        <div class="card-body">
-                            <h5>@group.Title</h5>
-                            @if (!string.IsNullOrEmpty(group.Description))
-                            {
-                                <p class="text-muted">@group.Description</p>
-                            }
-                            <p><small class="text-muted">Заданий: @group.Tasks.Count</small></p>
-                        </div>
-                        <div class="card-footer bg-transparent border-0">
-                            <a href="/Simulator/Group/@group.Id" class="btn btn-primary">Открыть</a>
-                        </div>
+                        <div class="card-body"><h5>@group.Title</h5>@if (!string.IsNullOrEmpty(group.Description)) { <p class="text-muted">@group.Description</p> }<p><small class="text-muted">Заданий: @group.Tasks.Count</small></p></div>
+                        <div class="card-footer bg-transparent border-0"><a href="/Simulator/Group/@group.Id" class="btn btn-primary">Открыть</a></div>
                     </div>
                 </div>
             }
         </div>
     }
-    else
-    {
-        <div class="alert alert-info">Пока нет доступных групп заданий.</div>
-    }
+    else { <div class="alert alert-info">Пока нет доступных групп заданий.</div> }
 </div>

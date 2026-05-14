@@ -1,4 +1,5 @@
 @model EmployeeTrainer.Models.Exam
+@using EmployeeTrainer.Models
 
 @{
     ViewData["Title"] = "Задания экзамена";
@@ -11,7 +12,6 @@
     .add-option-btn { cursor: pointer; color: #3498db; font-size: 0.9rem; }
     .add-option-btn:hover { color: #2980b9; }
     .remove-option { cursor: pointer; color: #e74c3c; font-size: 1.3rem; }
-    .section-title { font-weight: 600; margin-bottom: 15px; color: #3498db; }
     .card-task-type { border: 2px solid #e0e0e0; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; text-align: center; }
     .card-task-type:hover { border-color: #3498db; }
     .card-task-type.selected { border-color: #3498db; background: rgba(52,152,219,0.05); }
@@ -19,300 +19,85 @@
 
 <div class="container mt-4">
     <nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/Admin/Exams" onclick="return confirmExit()">Экзамены</a></li>
-        <li class="breadcrumb-item active">@Model.Title</li>
-    </ol>
-</nav>
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/Admin/Exams" onclick="return confirmExit()">Экзамены</a></li>
+            <li class="breadcrumb-item active">@Model.Title</li>
+        </ol>
     </nav>
 
     <h2>📋 @Model.Title</h2>
     <p class="text-muted">@Model.Description</p>
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
+    @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
+    @if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
 
-    <!-- Настройки экзамена -->
-<div class="card mb-4">
-    <div class="card-header">⚙️ Настройки экзамена</div>
-    <div class="card-body">
-        <form method="post" action="/Admin/UpdateExamSettings">
-            <input type="hidden" name="examId" value="@Model.Id" />
-            <div class="row">
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Название</label>
-                    <input type="text" name="title" class="form-control" value="@Model.Title" />
+    <!-- Настройки -->
+    <div class="card mb-4">
+        <div class="card-header">⚙️ Настройки экзамена</div>
+        <div class="card-body">
+            <form method="post" action="/Admin/UpdateExamSettings">
+                <input type="hidden" name="examId" value="@Model.Id" />
+                <div class="row">
+                    <div class="col-md-4 mb-2"><label class="form-label">Название</label><input type="text" name="title" class="form-control" value="@Model.Title" /></div>
+                    <div class="col-md-4 mb-2"><label class="form-label">Описание</label><input type="text" name="description" class="form-control" value="@Model.Description" /></div>
+                    <div class="col-md-2 mb-2"><label class="form-label">⏱️ Время (мин)</label><input type="number" name="timeLimitMinutes" class="form-control" value="@Model.TimeLimitMinutes" min="0" max="180" /></div>
+                    <div class="col-md-2 mb-2 d-flex align-items-end"><div class="form-check mb-2"><input type="hidden" name="shuffleQuestions" value="false" /><input type="checkbox" name="shuffleQuestions" value="true" class="form-check-input" id="shuffleCheck" @(Model.ShuffleQuestions ? "checked" : "") /><label class="form-check-label" for="shuffleCheck">🔀 Перемешивать</label></div></div>
                 </div>
-                <div class="col-md-4 mb-2">
-                    <label class="form-label">Описание</label>
-                    <input type="text" name="description" class="form-control" value="@Model.Description" />
-                </div>
-                <div class="col-md-2 mb-2">
-                    <label class="form-label">⏱️ Время (мин)</label>
-                    <input type="number" name="timeLimitMinutes" class="form-control" 
-                           value="@Model.TimeLimitMinutes" min="0" max="180" />
-                </div>
-                <div class="col-md-2 mb-2 d-flex align-items-end">
-                    <div class="form-check mb-2">
-                        <input type="hidden" name="shuffleQuestions" value="false" />
-                        <input type="checkbox" name="shuffleQuestions" value="true" 
-                               class="form-check-input" id="shuffleCheck"
-                               @(Model.ShuffleQuestions ? "checked" : "") />
-                        <label class="form-check-label" for="shuffleCheck">🔀 Перемешивать</label>
-                    </div>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">💾 Сохранить настройки</button>
-        </form>
+                <button type="submit" class="btn btn-primary">💾 Сохранить настройки</button>
+            </form>
+        </div>
     </div>
-</div>
+
     <!-- Добавление задания -->
     <div class="card mb-4">
         <div class="card-header">+ Добавить задание</div>
         <div class="card-body">
             <form id="addTaskForm" enctype="multipart/form-data">
-                <input type="hidden" id="OptionsJson" />
-                <input type="hidden" id="CorrectJson" />
-                <input type="hidden" id="ImageUrl" />
-                
-                <!-- Выбор типа -->
-                <div class="row mb-3" id="typeSelector">
-                    <div class="col-md-4 mb-2">
-                        <div class="card-task-type" data-type="0" onclick="selectType(0, this)">
-                            <div style="font-size: 2rem;">○</div>
-                            <strong>Один ответ</strong>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="card-task-type" data-type="1" onclick="selectType(1, this)">
-                            <div style="font-size: 2rem;">☑️</div>
-                            <strong>Несколько ответов</strong>
-                        </div>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <div class="card-task-type" data-type="2" onclick="selectType(2, this)">
-                            <div style="font-size: 2rem;">✍️</div>
-                            <strong>Свободный ответ</strong>
-                        </div>
-                    </div>
+                <input type="hidden" id="OptionsJson" /><input type="hidden" id="CorrectJson" /><input type="hidden" id="ImageUrl" />
+                <div class="row mb-3">
+                    <div class="col-md-4 mb-2"><div class="card-task-type" data-type="0" onclick="selectType(0,this)"><div style="font-size:2rem;">○</div><strong>Один ответ</strong></div></div>
+                    <div class="col-md-4 mb-2"><div class="card-task-type" data-type="1" onclick="selectType(1,this)"><div style="font-size:2rem;">☑️</div><strong>Несколько</strong></div></div>
+                    <div class="col-md-4 mb-2"><div class="card-task-type" data-type="2" onclick="selectType(2,this)"><div style="font-size:2rem;">✍️</div><strong>Свободный</strong></div></div>
                 </div>
-
                 <div id="commonFields" style="display:none;">
-                    <div class="mb-3">
-                        <label class="form-label">Название задания</label>
-                        <input type="text" id="taskTitle" class="form-control" required />
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">Вопрос</label>
-                        <textarea id="taskQuestion" class="form-control" rows="2" required></textarea>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label">🖼️ Фото</label>
-                        <input type="file" accept="image/*" class="form-control" onchange="uploadImage(this)" />
-                        <div id="preview" class="mt-2" style="display:none;">
-                            <img id="previewImg" class="img-fluid rounded" style="max-height:150px;" />
-                        </div>
-                    </div>
-
-                    <!-- Один ответ -->
-                    <div id="singleOptions" style="display:none;">
-                        <label class="form-label section-title">Варианты ответа</label>
-                        <div id="singleOptionsContainer">
-                            <div class="option-row">
-                                <input type="radio" name="singleCorrect" class="option-check" checked />
-                                <input type="text" class="form-control opt-text" placeholder="Правильный ответ" required />
-                                <span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span>
-                            </div>
-                            <div class="option-row">
-                                <input type="radio" name="singleCorrect" class="option-check" />
-                                <input type="text" class="form-control opt-text" placeholder="Неправильный ответ" required />
-                                <span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span>
-                            </div>
-                        </div>
-                        <a class="add-option-btn" onclick="addSingleOption()">+ Добавить вариант</a>
-                    </div>
-
-                    <!-- Несколько ответов -->
-                    <div id="multiOptions" style="display:none;">
-                        <label class="form-label section-title">Варианты ответа</label>
-                        <div id="multiOptionsContainer">
-                            <div class="option-row">
-                                <input type="checkbox" class="option-check multi-check" checked />
-                                <input type="text" class="form-control opt-text" placeholder="Правильный ответ" required />
-                                <span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span>
-                            </div>
-                            <div class="option-row">
-                                <input type="checkbox" class="option-check multi-check" />
-                                <input type="text" class="form-control opt-text" placeholder="Неправильный ответ" required />
-                                <span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span>
-                            </div>
-                        </div>
-                        <a class="add-option-btn" onclick="addMultiOption()">+ Добавить вариант</a>
-                    </div>
-
-                    <!-- Свободный ответ -->
-                    <div id="freeAnswer" style="display:none;">
-                        <label class="form-label section-title">Ожидаемый ответ (подсказка для проверяющего)</label>
-                        <textarea id="freeAnswerText" class="form-control" rows="3" 
-                                  placeholder="Правильный ответ или ключевые моменты"></textarea>
-                    </div>
-
-                    <button type="button" class="btn btn-success mt-3" onclick="addTask()">➕ Добавить задание</button>
+                    <div class="mb-3"><label class="form-label">Название</label><input type="text" id="taskTitle" class="form-control" required /></div>
+                    <div class="mb-3"><label class="form-label">Вопрос</label><textarea id="taskQuestion" class="form-control" rows="2" required></textarea></div>
+                    <div class="mb-3"><label class="form-label">🖼️ Фото</label><input type="file" accept="image/*" class="form-control" onchange="uploadImage(this)" /><div id="preview" class="mt-2" style="display:none;"><img id="previewImg" class="img-fluid rounded" style="max-height:150px;" /></div></div>
+                    <div id="singleOptions" style="display:none;"><label class="form-label fw-bold text-primary">Варианты</label><div id="singleOptionsContainer"><div class="option-row"><input type="radio" name="singleCorrect" class="option-check" checked /><input type="text" class="form-control opt-text" placeholder="Правильный" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div><div class="option-row"><input type="radio" name="singleCorrect" class="option-check" /><input type="text" class="form-control opt-text" placeholder="Неправильный" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div></div><a class="add-option-btn" onclick="addSingleOption()">+ Добавить</a></div>
+                    <div id="multiOptions" style="display:none;"><label class="form-label fw-bold text-primary">Варианты</label><div id="multiOptionsContainer"><div class="option-row"><input type="checkbox" class="option-check multi-check" checked /><input type="text" class="form-control opt-text" placeholder="Правильный" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div><div class="option-row"><input type="checkbox" class="option-check multi-check" /><input type="text" class="form-control opt-text" placeholder="Неправильный" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div></div><a class="add-option-btn" onclick="addMultiOption()">+ Добавить</a></div>
+                    <div id="freeAnswer" style="display:none;"><label class="form-label fw-bold text-primary">Ожидаемый ответ</label><textarea id="freeAnswerText" class="form-control" rows="3"></textarea></div>
+                    <button type="button" class="btn btn-success mt-3" onclick="addTask()">➕ Добавить</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Существующие задания -->
+    <!-- Список заданий -->
     <h4>Существующие задания (@Model.Tasks.Count)</h4>
     @foreach (var t in Model.Tasks.OrderBy(t => t.OrderIndex))
     {
-        <div class="card mb-2">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>@t.Title</strong>
-                        <span class="badge bg-info ms-2">
-                            @(t.Type == ExamTaskType.Single ? "○ Один" : t.Type == ExamTaskType.Multiple ? "☑️ Несколько" : "✍️ Свободный")
-                        </span>
-                        <p class="mb-0 text-muted small">@t.Question</p>
-                        @if (!string.IsNullOrEmpty(t.ImageUrl))
-                        {
-                            <img src="@t.ImageUrl" class="img-fluid rounded mt-1" style="max-height:60px;" />
-                        }
-                    </div>
-                    <form method="post" action="/Admin/DeleteExamTask/@t.Id">
-                        <input type="hidden" name="examId" value="@Model.Id" />
-                        <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить задание?')">🗑️</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+        <div class="card mb-2"><div class="card-body"><div class="d-flex justify-content-between align-items-start"><div><strong>@t.Title</strong><span class="badge bg-info ms-2">@(t.Type == ExamTaskType.Single ? "○" : t.Type == ExamTaskType.Multiple ? "☑️" : "✍️")</span><p class="mb-0 text-muted small">@t.Question</p>@if (!string.IsNullOrEmpty(t.ImageUrl)) { <img src="@t.ImageUrl" class="img-fluid rounded mt-1" style="max-height:60px;" /> }</div><form method="post" action="/Admin/DeleteExamTask/@t.Id"><input type="hidden" name="examId" value="@Model.Id" /><button class="btn btn-sm btn-danger" onclick="return confirm('Удалить?')">🗑️</button></form></div></div></div>
     }
 </div>
 
 @section Scripts {
     <script>
-        var selectedType = null;
-var formChanged = false;
-
-// Отслеживаем изменения в форме добавления задания
-document.getElementById('addTaskForm').addEventListener('input', function() {
-    formChanged = true;
-});
-
-function confirmExit() {
-    if (formChanged) {
-        return confirm('У вас есть несохранённые изменения. Уйти?');
-    }
-    return true;
-}
-        function selectType(type, el) {
-            document.querySelectorAll('.card-task-type').forEach(c => c.classList.remove('selected'));
-            el.classList.add('selected');
-            selectedType = type;
-            document.getElementById('commonFields').style.display = 'block';
-            document.getElementById('singleOptions').style.display = 'none';
-            document.getElementById('multiOptions').style.display = 'none';
-            document.getElementById('freeAnswer').style.display = 'none';
-            if (type === 0) document.getElementById('singleOptions').style.display = 'block';
-            else if (type === 1) document.getElementById('multiOptions').style.display = 'block';
-            else if (type === 2) document.getElementById('freeAnswer').style.display = 'block';
-        }
-
-        function addSingleOption() {
-            var div = document.createElement('div');
-            div.className = 'option-row';
-            div.innerHTML = '<input type="radio" name="singleCorrect" class="option-check" />' +
-                '<input type="text" class="form-control opt-text" placeholder="Вариант ответа" required />' +
-                '<span class="remove-option" onclick="this.closest(\'.option-row\').remove()">✕</span>';
-            document.getElementById('singleOptionsContainer').appendChild(div);
-        }
-
-        function addMultiOption() {
-            var div = document.createElement('div');
-            div.className = 'option-row';
-            div.innerHTML = '<input type="checkbox" class="option-check multi-check" />' +
-                '<input type="text" class="form-control opt-text" placeholder="Вариант ответа" required />' +
-                '<span class="remove-option" onclick="this.closest(\'.option-row\').remove()">✕</span>';
-            document.getElementById('multiOptionsContainer').appendChild(div);
-        }
-
+        var selectedType = null, formChanged = false;
+        document.getElementById('addTaskForm').addEventListener('input', function() { formChanged = true; });
+        function confirmExit() { return formChanged ? confirm('Есть несохранённые изменения. Уйти?') : true; }
+        function selectType(t, el) { document.querySelectorAll('.card-task-type').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); selectedType = t; document.getElementById('commonFields').style.display = 'block'; ['singleOptions','multiOptions','freeAnswer'].forEach(id => document.getElementById(id).style.display = 'none'); if (t === 0) document.getElementById('singleOptions').style.display = 'block'; else if (t === 1) document.getElementById('multiOptions').style.display = 'block'; else if (t === 2) document.getElementById('freeAnswer').style.display = 'block'; }
+        function addSingleOption() { var d = document.createElement('div'); d.className = 'option-row'; d.innerHTML = '<input type="radio" name="singleCorrect" class="option-check" /><input type="text" class="form-control opt-text" placeholder="Вариант" required /><span class="remove-option" onclick="this.closest(\'.option-row\').remove()">✕</span>'; document.getElementById('singleOptionsContainer').appendChild(d); }
+        function addMultiOption() { var d = document.createElement('div'); d.className = 'option-row'; d.innerHTML = '<input type="checkbox" class="option-check multi-check" /><input type="text" class="form-control opt-text" placeholder="Вариант" required /><span class="remove-option" onclick="this.closest(\'.option-row\').remove()">✕</span>'; document.getElementById('multiOptionsContainer').appendChild(d); }
         function addTask() {
-            if (selectedType === null) { alert('Выберите тип задания'); return; }
-            var title = document.getElementById('taskTitle').value.trim();
-            var question = document.getElementById('taskQuestion').value.trim();
+            if (selectedType === null) { alert('Выберите тип'); return; }
+            var title = document.getElementById('taskTitle').value.trim(), question = document.getElementById('taskQuestion').value.trim();
             if (!title || !question) { alert('Заполните название и вопрос'); return; }
-
-            var optionsJson = '';
-            var correctJson = '';
-
-            if (selectedType === 0) {
-                var texts = document.querySelectorAll('#singleOptionsContainer .opt-text');
-                var checks = document.querySelectorAll('#singleOptionsContainer .option-check');
-                var options = [];
-                var correctIdx = 0;
-                texts.forEach((t, i) => {
-                    if (t.value.trim()) {
-                        if (checks[i].checked) correctIdx = options.length;
-                        options.push(t.value.trim());
-                    }
-                });
-                if (options.length < 2) { alert('Минимум 2 варианта'); return; }
-                optionsJson = options.join('|');
-                correctJson = JSON.stringify([correctIdx]);
-            }
-            else if (selectedType === 1) {
-                var texts = document.querySelectorAll('#multiOptionsContainer .opt-text');
-                var checks = document.querySelectorAll('#multiOptionsContainer .multi-check');
-                var options = [];
-                var correctIndexes = [];
-                texts.forEach((t, i) => {
-                    if (t.value.trim()) {
-                        if (checks[i].checked) correctIndexes.push(options.length);
-                        options.push(t.value.trim());
-                    }
-                });
-                if (options.length < 2) { alert('Минимум 2 варианта'); return; }
-                optionsJson = options.join('|');
-                correctJson = JSON.stringify(correctIndexes);
-            }
-            else if (selectedType === 2) {
-                // Ничего не нужно
-            }
-
-            var fd = new FormData();
-            fd.append('examId', '@Model.Id');
-            fd.append('title', title);
-            fd.append('question', question);
-            fd.append('type', selectedType);
-            fd.append('optionsJson', optionsJson);
-            fd.append('correctJson', correctJson);
-            fd.append('imageUrl', document.getElementById('ImageUrl').value);
-
-            fetch('/Admin/AddExamTask', { method: 'POST', body: fd })
-                .then(function() { location.reload(); });
+            var opts = '', corr = '';
+            if (selectedType === 0) { var t = document.querySelectorAll('#singleOptionsContainer .opt-text'), c = document.querySelectorAll('#singleOptionsContainer .option-check'), o = [], ci = 0; t.forEach((x, i) => { if (x.value.trim()) { if (c[i].checked) ci = o.length; o.push(x.value.trim()); } }); if (o.length < 2) { alert('Минимум 2 варианта'); return; } opts = o.join('|'); corr = JSON.stringify([ci]); }
+            else if (selectedType === 1) { var t = document.querySelectorAll('#multiOptionsContainer .opt-text'), c = document.querySelectorAll('#multiOptionsContainer .multi-check'), o = [], cis = []; t.forEach((x, i) => { if (x.value.trim()) { if (c[i].checked) cis.push(o.length); o.push(x.value.trim()); } }); if (o.length < 2) { alert('Минимум 2 варианта'); return; } opts = o.join('|'); corr = JSON.stringify(cis); }
+            var fd = new FormData(); fd.append('examId', '@Model.Id'); fd.append('title', title); fd.append('question', question); fd.append('type', selectedType); fd.append('optionsJson', opts); fd.append('correctJson', corr); fd.append('imageUrl', document.getElementById('ImageUrl').value);
+            fetch('/Admin/AddExamTask', { method: 'POST', body: fd }).then(function() { location.reload(); });
         }
-
-        function uploadImage(input) {
-            var file = input.files[0];
-            if (!file) return;
-            var fd = new FormData(); fd.append('image', file);
-            fetch('/Admin/UploadImage', { method: 'POST', body: fd })
-                .then(r => r.json())
-                .then(d => {
-                    if (d.success) {
-                        document.getElementById('ImageUrl').value = d.url;
-                        document.getElementById('previewImg').src = d.url;
-                        document.getElementById('preview').style.display = 'block';
-                    } else alert(d.error);
-                });
-        }
+        function uploadImage(input) { var f = input.files[0]; if (!f) return; var fd = new FormData(); fd.append('image', f); fetch('/Admin/UploadImage', { method: 'POST', body: fd }).then(r => r.json()).then(d => { if (d.success) { document.getElementById('ImageUrl').value = d.url; document.getElementById('previewImg').src = d.url; document.getElementById('preview').style.display = 'block'; } else alert(d.error); }); }
     </script>
 }

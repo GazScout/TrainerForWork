@@ -11,73 +11,20 @@
     @if (Model.Any())
     {
         <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h1 class="display-4">@Model.Count</h1>
-                        <p>Всего попыток</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h1 class="display-4">@((int)Model.Average(r => r.Percentage))%</h1>
-                        <p>Средний результат</p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h1 class="display-4">@Model.Count(r => r.Percentage >= 80)</h1>
-                        <p>Успешных (≥80%)</p>
-                    </div>
-                </div>
-            </div>
+            <div class="col-md-4"><div class="card text-center"><div class="card-body"><h1 class="display-4">@Model.Count</h1><p>Всего попыток</p></div></div></div>
+            <div class="col-md-4"><div class="card text-center"><div class="card-body"><h1 class="display-4">@((int)Model.Average(r=>r.Percentage))%</h1><p>Средний результат</p></div></div></div>
+            <div class="col-md-4"><div class="card text-center"><div class="card-body"><h1 class="display-4">@Model.Count(r=>r.Percentage>=80)</h1><p>Успешных (≥80%)</p></div></div></div>
         </div>
-
         <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Тест</th>
-                    <th>Результат</th>
-                    <th>Время</th>
-                    <th>Дата</th>
-                </tr>
-            </thead>
+            <thead><tr><th>Тест</th><th>Результат</th><th>Время</th><th>Дата</th></tr></thead>
             <tbody>
-                @foreach (var result in Model)
+                @foreach (var r in Model)
                 {
-                    <tr>
-                        <td>@(result.Test?.Title ?? "Тест удалён")</td>
-                        <td>
-                            <span class="badge @(result.Percentage >= 80 ? "bg-success" : result.Percentage >= 50 ? "bg-warning" : "bg-danger")">
-                                @result.Score / @result.TotalQuestions (@result.Percentage%)
-                            </span>
-                        </td>
-                        <td>@FormatTime(result.TimeSpentSeconds)</td>
-                        <td>@result.CompletedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
-                    </tr>
+                    var ts = TimeSpan.FromSeconds(r.TimeSpentSeconds);
+                    <tr><td>@(r.Test?.Title??"—")</td><td><span class="badge @(r.Percentage>=80?"bg-success":r.Percentage>=50?"bg-warning text-dark":"bg-danger")">@r.Score/@r.TotalQuestions (@r.Percentage%)</span></td><td>@(ts.TotalMinutes>=1?$"{(int)ts.TotalMinutes} мин {ts.Seconds} сек":$"{ts.Seconds} сек")</td><td>@r.CompletedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td></tr>
                 }
             </tbody>
         </table>
     }
-    else
-    {
-        <div class="alert alert-info">
-            <p>Вы ещё не прошли ни одного теста.</p>
-            <a href="/Test" class="btn btn-primary">Перейти к тестам</a>
-        </div>
-    }
+    else { <div class="alert alert-info"><p>Вы ещё не прошли ни одного теста.</p><a href="/Test" class="btn btn-primary">Перейти к тестам</a></div> }
 </div>
-
-@functions {
-    string FormatTime(int seconds)
-    {
-        var ts = TimeSpan.FromSeconds(seconds);
-        return ts.TotalMinutes >= 1
-            ? $"{(int)ts.TotalMinutes} мин {ts.Seconds} сек"
-            : $"{ts.Seconds} сек";
-    }
-}

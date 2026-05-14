@@ -8,78 +8,43 @@
     <h2>📁 Группы заданий</h2>
     <a href="/Admin" class="btn btn-outline-secondary mb-3">← Назад</a>
 
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success">@TempData["Success"]</div>
-    }
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
+    @if (TempData["Success"] != null) { <div class="alert alert-success">@TempData["Success"]</div> }
+    @if (TempData["Error"] != null) { <div class="alert alert-danger">@TempData["Error"]</div> }
 
     <div class="card mb-4">
         <div class="card-header">+ Создать группу</div>
         <div class="card-body">
             <form method="post" action="/Admin/CreateTaskGroup" class="row">
-                <div class="col-md-5 mb-2">
-                    <input type="text" name="title" class="form-control" placeholder="Название группы" required />
-                </div>
-                <div class="col-md-5 mb-2">
-                    <input type="text" name="description" class="form-control" placeholder="Описание (необязательно)" />
-                </div>
-                <div class="col-md-2 mb-2">
-                    <button type="submit" class="btn btn-success w-100">➕ Создать</button>
-                </div>
+                <div class="col-md-5 mb-2"><input type="text" name="title" class="form-control" placeholder="Название группы" required /></div>
+                <div class="col-md-5 mb-2"><input type="text" name="description" class="form-control" placeholder="Описание" /></div>
+                <div class="col-md-2 mb-2"><button type="submit" class="btn btn-success w-100">➕ Создать</button></div>
             </form>
         </div>
     </div>
 
     <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Название</th>
-                <th>Заданий</th>
-                <th>Статус</th>
-                <th>Действия</th>
-            </tr>
-        </thead>
+        <thead><tr><th>ID</th><th>Название</th><th>Заданий</th><th>Статус</th><th>Действия</th></tr></thead>
         <tbody>
             @foreach (var g in Model)
             {
                 <tr>
-                    <td>@g.Id</td>
-                    <td>@g.Title</td>
-                    <td>@g.Tasks.Count</td>
-                    <td>
-                        <span class="badge @(g.IsPublished ? "bg-success" : "bg-secondary")">
-                            @(g.IsPublished ? "📢 Опубликовано" : "🔒 Скрыто")
-                        </span>
-                    </td>
+                    <td>@g.Id</td><td>@g.Title</td><td>@g.Tasks.Count</td>
+                    <td><span class="badge @(g.IsPublished ? "bg-success" : "bg-secondary")">@(g.IsPublished ? "📢 Опубликовано" : "🔒 Скрыто")</span></td>
                     <td>
                         <div class="d-flex gap-1 flex-wrap">
                             <a href="/Admin/Tasks?groupId=@g.Id" class="btn btn-sm btn-info">📋 Задания</a>
-                            
                             @if (g.Tasks.Any())
                             {
                                 <form method="post" action="/Admin/TogglePublishTaskGroup/@g.Id" style="display:inline">
-                                    <button class="btn btn-sm @(g.IsPublished ? "btn-warning" : "btn-success")"
-                                            title="@(g.IsPublished ? "Скрыть от пользователей" : "Опубликовать для пользователей")">
-                                        @(g.IsPublished ? "🔒 Скрыть" : "📢 Опубликовать")
-                                    </button>
+                                    <button class="btn btn-sm @(g.IsPublished ? "btn-warning" : "btn-success")" title="@(g.IsPublished ? "Скрыть" : "Опубликовать")">@(g.IsPublished ? "🔒" : "📢")</button>
                                 </form>
                             }
                             else
                             {
-                                <button class="btn btn-sm btn-outline-secondary" disabled 
-                                        title="Добавьте хотя бы одно задание">
-                                    📢 Опубликовать
-                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" disabled title="Добавьте хотя бы одно задание">📢</button>
                             }
-                            
                             <form method="post" action="/Admin/DeleteTaskGroup/@g.Id" style="display:inline">
-                                <button class="btn btn-sm btn-danger" 
-                                        onclick="return confirm('Удалить группу «@g.Title»?')">🗑️</button>
+                                <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить группу «@g.Title»?')">🗑️</button>
                             </form>
                         </div>
                     </td>

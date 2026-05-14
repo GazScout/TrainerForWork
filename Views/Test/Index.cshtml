@@ -5,64 +5,26 @@
 }
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
-        <h2>📝 Доступные тесты</h2>
-        <a href="/Test/MyStats" class="btn btn-outline-info">📊 Моя статистика</a>
-    </div>
+    <div class="d-flex justify-content-between align-items-center"><h2>📝 Доступные тесты</h2><a href="/Test/MyStats" class="btn btn-outline-info">📊 Моя статистика</a></div>
 
-    @if (Model.Any())
+    @if (Model.Any(t => t.Questions.Any()))
     {
         <div class="row mt-4">
-            @foreach (var test in Model)
+            @foreach (var test in Model.Where(t => t.Questions.Any()))
             {
                 var isCompleted = ((List<int>?)ViewBag.CompletedTests)?.Contains(test.Id) ?? false;
-                
                 <div class="col-md-6 mb-3">
                     <div class="card h-100 @(isCompleted ? "border-success" : "")">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between">
-                                <h5 class="card-title">@test.Title</h5>
-                                @if (isCompleted)
-                                {
-                                    <span class="badge bg-success">✅ Пройден</span>
-                                }
-                            </div>
-                            @if (!string.IsNullOrEmpty(test.Description))
-                            {
-                                <p class="card-text text-muted">@test.Description</p>
-                            }
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    Вопросов: <strong>@test.Questions.Count</strong>
-                                    @if (test.TimeLimitMinutes > 0)
-                                    {
-                                        <span> | ⏱️ Ограничение: <strong>@test.TimeLimitMinutes мин</strong></span>
-                                    }
-                                    else
-                                    {
-                                        <span> | ⏱️ Без ограничения времени</span>
-                                    }
-                                </small>
-                            </p>
+                            <div class="d-flex justify-content-between"><h5>@test.Title</h5>@if (isCompleted) { <span class="badge bg-success">✅ Пройден</span> }</div>
+                            @if (!string.IsNullOrEmpty(test.Description)) { <p class="text-muted">@test.Description</p> }
+                            <p><small class="text-muted">Вопросов: <strong>@test.Questions.Count</strong>@(test.TimeLimitMinutes > 0 ? $" | ⏱️ {test.TimeLimitMinutes} мин" : " | ⏱️ Без ограничения")</small></p>
                         </div>
-                        <div class="card-footer bg-white border-0">
-                            <a href="/Test/Take/@test.Id" class="btn btn-primary">
-                                @(isCompleted ? "🔄 Пройти заново" : "Пройти тест")
-                            </a>
-                        </div>
+                        <div class="card-footer bg-transparent border-0"><a href="/Test/Take/@test.Id" class="btn btn-primary">@(isCompleted ? "🔄 Пройти заново" : "Пройти тест")</a></div>
                     </div>
                 </div>
             }
-            @if (!Model.Any(t => t.Questions.Any()))
-{
-    <div class="alert alert-info">Пока нет доступных тестов.</div>
-}
         </div>
     }
-    else
-    {
-        <div class="alert alert-info mt-4">
-            <p>Пока нет доступных тестов.</p>
-        </div>
-    }
+    else { <div class="alert alert-info mt-4">Пока нет доступных тестов.</div> }
 </div>

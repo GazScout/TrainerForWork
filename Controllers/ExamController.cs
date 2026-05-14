@@ -18,28 +18,32 @@ public class ExamController : Controller
         _context = context;
     }
 
-    // Список доступных экзаменов
+    #region Список экзаменов
+
     public async Task<IActionResult> Index()
-{
-    var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-    
-    var exams = await _context.Exams
-        .Where(e => e.IsPublished)
-        .Include(e => e.Tasks)
-        .OrderByDescending(e => e.CreatedAt)
-        .ToListAsync();
+    {
+        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-    var completedExams = await _context.ExamSubmissions
-        .Where(s => s.UserId == userId)
-        .Select(s => s.ExamId)
-        .Distinct()
-        .ToListAsync();
+        var exams = await _context.Exams
+            .Where(e => e.IsPublished)
+            .Include(e => e.Tasks)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync();
 
-    ViewBag.CompletedExams = completedExams;
-    return View(exams);
-}
+        var completedExams = await _context.ExamSubmissions
+            .Where(s => s.UserId == userId)
+            .Select(s => s.ExamId)
+            .Distinct()
+            .ToListAsync();
 
-    // Прохождение экзамена
+        ViewBag.CompletedExams = completedExams;
+        return View(exams);
+    }
+
+    #endregion
+
+    #region Прохождение экзамена
+
     public async Task<IActionResult> Take(int id)
     {
         var exam = await _context.Exams
@@ -50,14 +54,16 @@ public class ExamController : Controller
 
         var tasks = exam.Tasks.AsEnumerable();
         if (exam.ShuffleQuestions)
-        {
             tasks = tasks.OrderBy(t => Guid.NewGuid());
-        }
+
         ViewBag.Exam = exam;
-        return View(tasks);
+        return View(tasks.ToList());
     }
 
-    // Отправка экзамена
+    #endregion
+
+    #region Отправка на проверку
+
     [HttpPost]
     public async Task<IActionResult> Submit(int examId, IFormCollection form)
     {
@@ -67,24 +73,22 @@ public class ExamController : Controller
         foreach (var key in form.Keys)
         {
             if (key.StartsWith("answer_"))
-            {
-                var taskId = key.Replace("answer_", "");
-                answers[taskId] = form[key].ToString();
-            }
+                answers[key.Replace("answer_", "")] = form[key].ToString();
         }
 
-        var submission = new ExamSubmission
+        _context.ExamSubmissions.Add(new ExamSubmission
         {
             ExamId = examId,
             UserId = userId,
             AnswersJson = JsonSerializer.Serialize(answers),
             SubmittedAt = DateTime.UtcNow
-        };
+        });
 
-        _context.ExamSubmissions.Add(submission);
         await _context.SaveChangesAsync();
 
         TempData["Success"] = "Экзамен отправлен на проверку!";
         return RedirectToAction(nameof(Index));
     }
+
+    #endregion
 }

@@ -17,6 +17,8 @@ public class AuthController : Controller
         _context = context;
     }
 
+    #region Вход
+
     [HttpGet]
     public IActionResult Login()
     {
@@ -26,8 +28,7 @@ public class AuthController : Controller
     [HttpPost]
     public async Task<IActionResult> Login(string username, string password)
     {
-        var user = await _context.Users
-            .FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username && u.IsActive);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
         {
@@ -37,19 +38,21 @@ public class AuthController : Controller
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.GivenName, user.FullName ?? user.Username),
-            new Claim(ClaimTypes.Role, user.Role.ToString())
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(ClaimTypes.Name, user.Username),
+            new(ClaimTypes.GivenName, user.FullName ?? user.Username),
+            new(ClaimTypes.Role, user.Role.ToString())
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
 
         return RedirectToAction("Index", "Home");
     }
+
+    #endregion
+
+    #region Выход
 
     public async Task<IActionResult> Logout()
     {
@@ -61,4 +64,6 @@ public class AuthController : Controller
     {
         return View();
     }
+
+    #endregion
 }

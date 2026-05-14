@@ -1,7 +1,9 @@
 @model EmployeeTrainer.Models.SimulatorTask
+@using EmployeeTrainer.Models
 
 @{
     ViewData["Title"] = "Редактирование задания";
+    var isPhoto = Model.Type != TaskType.FormTask;
 }
 
 <div class="container mt-4">
@@ -9,69 +11,35 @@
 
     <form method="post" enctype="multipart/form-data">
         <input type="hidden" name="Id" value="@Model.Id" />
-        
+
         <div class="mb-3">
             <label class="form-label">Тип задания</label>
-            <option value="0" selected="@(Model.Type == TaskType.PhotoSingle)">📷 ○ Один ответ</option>
-<option value="1" selected="@(Model.Type == TaskType.PhotoMultiple)">📷 ☑️ Несколько</option>
-<option value="2" selected="@(Model.Type == TaskType.PhotoFree)">📷 ✍️ Свободный</option>
-<option value="3" selected="@(Model.Type == TaskType.FormTask)">📝 Заполнение формы</option>
-        </div>
-        
-        <div class="mb-3">
-            <label class="form-label">Название</label>
-            <input type="text" name="Title" class="form-control" value="@Model.Title" required />
+            <select name="Type" class="form-control" id="taskType" onchange="togglePhotoField()">
+                <option value="0" selected="@(Model.Type == TaskType.PhotoSingle)">📷 ○ Один ответ</option>
+                <option value="1" selected="@(Model.Type == TaskType.PhotoMultiple)">📷 ☑️ Несколько</option>
+                <option value="2" selected="@(Model.Type == TaskType.PhotoFree)">📷 ✍️ Свободный</option>
+                <option value="3" selected="@(Model.Type == TaskType.FormTask)">📝 Форма</option>
+            </select>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">Содержание</label>
-            <textarea name="Content" class="form-control" rows="3" required>@Model.Content</textarea>
-        </div>
+        <div class="mb-3"><label class="form-label">Название</label><input type="text" name="Title" class="form-control" value="@Model.Title" required /></div>
+        <div class="mb-3"><label class="form-label">Содержание</label><textarea name="Content" class="form-control" rows="3" required>@Model.Content</textarea></div>
+        <div class="mb-3"><label class="form-label">Ответы</label><textarea name="AnswerJson" class="form-control" rows="3" required>@Model.AnswerJson</textarea></div>
+        <div class="mb-3"><label class="form-label">📖 Пояснение</label><input type="text" name="Explanation" class="form-control" value="@Model.Explanation" /></div>
+        <div class="mb-3"><label class="form-label">💡 Подсказка</label><input type="text" name="Hint" class="form-control" value="@Model.Hint" /></div>
 
-        <div class="mb-3">
-            <label class="form-label">Ответы</label>
-            <textarea name="AnswerJson" class="form-control" rows="3" required>@Model.AnswerJson</textarea>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">📖 Пояснение</label>
-            <input type="text" name="Explanation" class="form-control" value="@Model.Explanation" />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label">💡 Подсказка</label>
-            <input type="text" name="Hint" class="form-control" value="@Model.Hint" />
-        </div>
-
-        <div class="mb-3" id="photoField" style="@(Model.Type == TaskType.FormTask ? "display:none;" : "")">
+        <div class="mb-3" id="photoField" style="@(isPhoto ? "" : "display:none;")">
             <label class="form-label">🖼️ Фото</label>
             @if (!string.IsNullOrEmpty(Model.ImageUrl))
             {
-                <div class="mb-2">
-                    <img src="@Model.ImageUrl" class="img-fluid rounded" style="max-height:100px;" />
-                    <p class="text-muted small">Текущее фото</p>
-                </div>
+                <div class="mb-2"><img src="@Model.ImageUrl" class="img-fluid rounded" style="max-height:100px;" /><p class="text-muted small">Текущее фото</p></div>
             }
             <input type="file" accept="image/*" class="form-control" onchange="uploadImage(this)" />
             <input type="hidden" name="ImageUrl" id="ImageUrl" value="@Model.ImageUrl" />
-            <div id="preview" class="mt-2" style="display:none;">
-                <img id="previewImg" class="img-fluid rounded" style="max-height:150px;" />
-            </div>
+            <div id="preview" class="mt-2" style="display:none;"><img id="previewImg" class="img-fluid rounded" style="max-height:150px;" /></div>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label">📁 Группа</label>
-            <select name="TaskGroupId" class="form-control">
-                <option value="">Без группы</option>
-                @if (ViewBag.TaskGroups != null)
-                {
-                    @foreach (var g in ViewBag.TaskGroups)
-                    {
-                        <option value="@g.Id" selected="@(Model.TaskGroupId == g.Id)">@g.Title</option>
-                    }
-                }
-            </select>
-        </div>
+        <div class="mb-3"><label class="form-label">📁 Группа</label><select name="TaskGroupId" class="form-control"><option value="">Без группы</option>@if (ViewBag.TaskGroups != null) { foreach (var g in ViewBag.TaskGroups) { <option value="@g.Id" selected="@(Model.TaskGroupId == g.Id)">@g.Title</option> } }</select></div>
 
         <button type="submit" class="btn btn-primary btn-lg">💾 Сохранить</button>
         <a href="/Admin/Tasks" class="btn btn-outline-secondary btn-lg">Отмена</a>
@@ -80,27 +48,7 @@
 
 @section Scripts {
     <script>
-        function togglePhotoField() {
-            var type = document.getElementById('taskType').value;
-            document.getElementById('photoField').style.display = type === '0' ? 'block' : 'none';
-        }
-
-        function uploadImage(input) {
-            var file = input.files[0];
-            if (!file) return;
-            var fd = new FormData();
-            fd.append('image', file);
-            fetch('/Admin/UploadImage', { method: 'POST', body: fd })
-                .then(function(r) { return r.json(); })
-                .then(function(d) {
-                    if (d.success) {
-                        document.getElementById('ImageUrl').value = d.url;
-                        document.getElementById('previewImg').src = d.url;
-                        document.getElementById('preview').style.display = 'block';
-                    } else {
-                        alert(d.error);
-                    }
-                });
-        }
+        function togglePhotoField() { document.getElementById('photoField').style.display = document.getElementById('taskType').value === '3' ? 'none' : 'block'; }
+        function uploadImage(input) { var f = input.files[0]; if (!f) return; var fd = new FormData(); fd.append('image', f); fetch('/Admin/UploadImage', { method: 'POST', body: fd }).then(r => r.json()).then(d => { if (d.success) { document.getElementById('ImageUrl').value = d.url; document.getElementById('previewImg').src = d.url; document.getElementById('preview').style.display = 'block'; } else alert(d.error); }); }
     </script>
 }
