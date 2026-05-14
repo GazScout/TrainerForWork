@@ -34,15 +34,15 @@
                         <td>@sub.SubmittedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
                         <td>@(sub.Score == null ? Html.Raw("<span class=\"badge bg-warning text-dark\">⏳ На проверке</span>") : Html.Raw($"<span class=\"badge bg-success\">✅ {sub.Score} баллов</span>"))</td>
                         <td>
-    @if (sub.Score == null)
-    {
-        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal@(sub.Id)">📝 Проверить</button>
-    }
-    else
-    {
-        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal@(sub.Id)">✏️ Изменить</button>
-    }
-</td>
+                        @if (sub.Score == null)
+                        {
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal@(sub.Id)">📝 Проверить</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal@(sub.Id)">✏️ Изменить</button>
+                        }
+                    </td>
                     </tr>
                 }
             </tbody>
