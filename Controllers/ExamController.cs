@@ -69,6 +69,19 @@ public class ExamController : Controller
     {
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        // Проверяем, есть ли уже отправленная работа
+        var existing = await _context.ExamSubmissions
+            .Where(s => s.ExamId == examId && s.UserId == userId)
+            .OrderByDescending(s => s.SubmittedAt)
+            .FirstOrDefaultAsync();
+
+        // Если есть непроверенная — не даём отправить снова
+        if (existing != null && existing.Score == null)
+        {
+            TempData["Error"] = "Вы уже отправили этот экзамен. Дождитесь проверки.";
+            return RedirectToAction("Index");
+        }
+
         var answers = new Dictionary<string, string>();
         foreach (var key in form.Keys)
         {

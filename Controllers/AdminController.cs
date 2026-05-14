@@ -651,8 +651,19 @@ public class AdminController : Controller
         if (!showAll)
             query = query.Where(s => s.Score == null);
 
+        var submissions = await query
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToListAsync();
+
+        // Оставляем только последнюю попытку для каждого пользователя по каждому экзамену
+        submissions = submissions
+            .GroupBy(s => new { s.ExamId, s.UserId })
+            .Select(g => g.First())
+            .OrderByDescending(s => s.SubmittedAt)
+            .ToList();
+
         ViewBag.ShowAll = showAll;
-        return View(await query.OrderByDescending(s => s.SubmittedAt).ToListAsync());
+        return View(submissions);
     }
 
     [HttpPost]

@@ -16,7 +16,11 @@
                 <div class="col-md-6 mb-3">
                     <div class="card h-100 @(isCompleted ? "border-success" : "")">
                         <div class="card-body">
-                            <div class="d-flex justify-content-between"><h5>@test.Title</h5>@if (isCompleted) { <span class="badge bg-success">✅ Пройден</span> }</div>
+                            <div class="d-flex justify-content-between"><h5>@test.Title</h5>@if (isCompleted)
+{
+    var bestResult = ((List<TestResult>)ViewBag.BestResults)?.FirstOrDefault(r => r.TestId == test.Id);
+    <span class="badge bg-success">✅ @(bestResult?.Percentage)%</span>
+}</div>
                             @if (!string.IsNullOrEmpty(test.Description)) { <p class="text-muted">@test.Description</p> }
                             <p><small class="text-muted">Вопросов: <strong>@test.Questions.Count</strong>@(test.TimeLimitMinutes > 0 ? $" | ⏱️ {test.TimeLimitMinutes} мин" : " | ⏱️ Без ограничения")</small></p>
                         </div>

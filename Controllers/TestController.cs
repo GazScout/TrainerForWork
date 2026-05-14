@@ -25,9 +25,18 @@ public class TestController : Controller
     {
         var tests = await _context.Tests.Include(t => t.Questions).ToListAsync();
         var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        ViewBag.CompletedTests = await _context.TestResults
-            .Where(r => r.UserId == userId).Select(r => r.TestId).ToListAsync();
-        return View(tests);
+        var completedTests = await _context.TestResults
+            .Where(r => r.UserId == userId).Select(r => r.TestId).Distinct().ToListAsync();
+
+        ViewBag.CompletedTests = completedTests;
+
+        ViewBag.BestResults = await _context.TestResults
+            .Where(r => r.UserId == userId && completedTests.Contains(r.TestId))
+            .GroupBy(r => r.TestId)
+            .Select(g => g.OrderByDescending(r => r.Percentage).First())
+            .ToListAsync();
+
+        return View(tests.Where(t => t.Questions.Any()).ToList());
     }
 
     #endregion
@@ -51,7 +60,7 @@ public class TestController : Controller
                 Id = q.Id, Question = q.Question,
                 Options = string.IsNullOrEmpty(q.OptionsJson) ? new() : JsonSerializer.Deserialize<List<string>>(q.OptionsJson) ?? new(),
                 CorrectIndexes = string.IsNullOrEmpty(q.CorrectAnswersJson) ? new() : JsonSerializer.Deserialize<List<int>>(q.CorrectAnswersJson) ?? new(),
-                AllowMultipleCorrect = q.AllowMultipleCorrect, CorrectAnswersJson = q.CorrectAnswersJson
+                AllowMultipleCorrect = q.AllowMultipleCorrect, CorrectAnswersJson = q.CorrectAnswersJson, Explanation = q.Explanation
             }).ToList()
         });
     }

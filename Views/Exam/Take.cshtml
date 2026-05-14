@@ -40,11 +40,11 @@
 
 @section Scripts {
     <script>
-        var examStarted = false, elapsed = 0, timerInterval;
+        var examStarted = false, elapsed = 0, timerInterval, submitted = false;
         window.addEventListener('DOMContentLoaded', function() { new bootstrap.Modal(document.getElementById('startModal')).show(); });
-        function startExam() { examStarted = true; if (@timeLimit > 0) { timerInterval = setInterval(function() { elapsed++; var rem = @timeLimit * 60 - elapsed; if (rem <= 0) { clearInterval(timerInterval); alert('Время вышло!'); document.getElementById('examForm').submit(); } else { document.getElementById('timer').textContent = Math.floor(rem/60) + ':' + (rem%60 < 10 ? '0' : '') + rem%60; } }, 1000); } }
+        function startExam() { examStarted = true; if (@timeLimit > 0) { timerInterval = setInterval(function() { elapsed++; var rem = @timeLimit * 60 - elapsed; if (rem <= 0) { clearInterval(timerInterval); alert('Время вышло!'); if (!submitted) { submitted = true; document.getElementById('examForm').submit(); } } else { document.getElementById('timer').textContent = Math.floor(rem/60) + ':' + (rem%60 < 10 ? '0' : '') + rem%60; } }, 1000); } }
         function confirmSubmit() { if (!examStarted) return; new bootstrap.Modal(document.getElementById('confirmModal')).show(); }
-        function submitExam() { document.getElementById('examForm').submit(); }
-        window.addEventListener('beforeunload', function(e) { if (examStarted) { navigator.sendBeacon('/Exam/Submit', new FormData(document.getElementById('examForm'))); } });
+        function submitExam() { submitted = true; document.getElementById('examForm').submit(); }
+        window.addEventListener('beforeunload', function(e) { if (examStarted && !submitted) { submitted = true; navigator.sendBeacon('/Exam/Submit', new FormData(document.getElementById('examForm'))); } });
     </script>
 }
