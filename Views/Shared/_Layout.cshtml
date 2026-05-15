@@ -24,7 +24,7 @@
                     </ul>
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item d-flex align-items-center me-2"><button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему"><span class="theme-icon">🌙</span></button></li>
-                        <li class="nav-item"><a class="nav-link" href="/Profile">👤 @User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</a></li>
+                        <li class="nav-item"><a class="nav-link" href="/Profile">👤 @(User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value ?? User.Identity?.Name)</a></li>
                         <li class="nav-item"><a class="nav-link" href="/Auth/Logout">🚪 Выйти</a></li>
                     </ul>
                 }

@@ -46,7 +46,14 @@
                 <tr class="@(isCurrentUser ? "current-user-row" : "")">
                     <td>@user.Id</td>
                     <td>@user.Username @(isCurrentUser ? Html.Raw("<span class=\"badge bg-info\">Вы</span>") : "")</td>
-                    <td>@user.FullName</td>
+                    <td>
+                        <form method="post" action="/Admin/UpdateUserFullName" style="display:inline;">
+                            <input type="hidden" name="userId" value="@user.Id" />
+                            <input type="text" name="fullName" class="form-control form-control-sm" value="@user.FullName" 
+                                style="width:150px;display:inline;" placeholder="Не указано" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">💾</button>
+                        </form>
+                    </td>
                     <td>@(user.Role switch { UserRole.SuperAdmin => Html.Raw("<span class=\"badge bg-warning text-dark\">👑 Супер-админ</span>"), UserRole.Admin => Html.Raw("<span class=\"badge bg-primary\">👑 Админ</span>"), _ => Html.Raw("<span class=\"badge bg-secondary\">👤 Сотрудник</span>") })</td>
                     <td><span class="badge @(user.IsActive ? "bg-success" : "bg-danger")">@(user.IsActive ? "Активен" : "Заблокирован")</span></td>
                     <td>@user.CreatedAt.ToShortDateString()</td>

@@ -9,8 +9,17 @@
     </div>
 
     <div class="row mt-5">
-        <div class="col-md-4"><div class="card text-center"><div class="card-body"><h5>📖 Справочник</h5><p class="card-text">Информация по работе и общению с клиентами</p><a href="/Handbook" class="btn btn-primary">Открыть</a></div></div></div>
-        <div class="col-md-4"><div class="card text-center"><div class="card-body"><h5>📝 Тесты</h5><p class="card-text">Проверьте свои знания</p><a href="/Test" class="btn btn-primary">Пройти</a></div></div></div>
-        <div class="col-md-4"><div class="card text-center"><div class="card-body"><h5>🔧 Тренажёр</h5><p class="card-text">Находите ошибки и заполняйте документы</p><a href="/Simulator" class="btn btn-primary">Тренироваться</a></div></div></div>
+        <div class="col-md-3"><div class="card text-center"><div class="card-body"><h5>📖 Справочник</h5><p class="card-text">Информация по работе</p><a href="/Handbook" class="btn btn-primary">Открыть</a></div></div></div>
+        <div class="col-md-3"><div class="card text-center"><div class="card-body"><h5>📝 Тесты</h5><p class="card-text">Проверьте знания</p><a href="/Test" class="btn btn-primary">Пройти</a></div></div></div>
+        <div class="col-md-3"><div class="card text-center"><div class="card-body"><h5>🔧 Тренажёр</h5><p class="card-text">Отработка навыков</p><a href="/Simulator" class="btn btn-primary">Тренироваться</a></div></div></div>
+        <div class="col-md-3">
+            <div class="card text-center @(ViewBag.HasNewExams == true ? "" : "border-secondary")">
+                <div class="card-body">
+                    <h5>📋 Экзамены</h5>
+                    <p class="card-text">@(ViewBag.HasNewExams == true ? "Есть непройденные" : "Всё пройдено")</p>
+                    <a href="/Exam" class="btn @(ViewBag.HasNewExams == true ? "btn-primary" : "btn-outline-secondary")">Перейти</a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

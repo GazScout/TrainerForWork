@@ -341,6 +341,16 @@ public class AdminController : Controller
     }
 
     [HttpPost]
+    public async Task<IActionResult> UpdateUserFullName(int userId, string fullName)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return NotFound();
+        user.FullName = string.IsNullOrWhiteSpace(fullName) ? null : fullName.Trim();
+        await _context.SaveChangesAsync();
+        return RedirectToAction(nameof(Users));
+    }
+
+    [HttpPost]
     public async Task<IActionResult> ToggleUserStatus(int userId)
     {
         var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "0");
