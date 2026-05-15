@@ -8,6 +8,11 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/EmployeeTrainer.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/EmployeeTrainer.pdb
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/BCrypt.Net-Next.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ClosedXML.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ClosedXML.Parser.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/DocumentFormat.OpenXml.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/DocumentFormat.OpenXml.Framework.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ExcelNumberFormat.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/Humanizer.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/Microsoft.Build.Framework.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/Microsoft.CodeAnalysis.dll
@@ -26,6 +31,8 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/Microsoft.VisualStudio.SolutionPersistence.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/Mono.TextTemplating.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/Newtonsoft.Json.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/RBush.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/SixLabors.Fonts.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/SQLitePCLRaw.batteries_v2.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/SQLitePCLRaw.core.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/SQLitePCLRaw.provider.e_sqlite3.dll
@@ -35,6 +42,7 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/System.Composition.Hosting.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/System.Composition.Runtime.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/System.Composition.TypedParts.dll
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/System.IO.Packaging.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/cs/Microsoft.CodeAnalysis.resources.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/de/Microsoft.CodeAnalysis.resources.dll
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/es/Microsoft.CodeAnalysis.resources.dll
@@ -132,6 +140,7 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.MvcApplicationPartsAssemblyInfo.cache
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.RazorAssemblyInfo.cache
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.RazorAssemblyInfo.cs
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.sourcelink.json
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/rjimswa.dswa.cache.json
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/rjsmrazor.dswa.cache.json
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/rjsmcshtml.dswa.cache.json
@@ -139,6 +148,7 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/scopedcss/bundle/EmployeeTrainer.styles.css
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/scopedcss/projectbundle/EmployeeTrainer.bundle.scp.css
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/ymeoo3w8h2-{0}-b9sayid5wm-b9sayid5wm.gz
+/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/0obl6xfhvi-{0}-729u0cpx9k-729u0cpx9k.gz
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/tnxerv01m9-{0}-61n19gt1b8-61n19gt1b8.gz
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/xgzcvo6nt4-{0}-b88vxczj5f-b88vxczj5f.gz
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/88rvn45klk-{0}-xtxxf3hu2r-xtxxf3hu2r.gz
@@ -215,13 +225,3 @@
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.pdb
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.genruntimeconfig.cache
 /Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/ref/EmployeeTrainer.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/EmployeeTrainer.sourcelink.json
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ClosedXML.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ClosedXML.Parser.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/DocumentFormat.OpenXml.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/DocumentFormat.OpenXml.Framework.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/ExcelNumberFormat.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/RBush.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/SixLabors.Fonts.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/bin/Debug/net10.0/System.IO.Packaging.dll
-/Users/tester/Desktop/DasWasMine/MyTrainer/EmployeeTrainer/obj/Debug/net10.0/compressed/0obl6xfhvi-{0}-729u0cpx9k-729u0cpx9k.gz

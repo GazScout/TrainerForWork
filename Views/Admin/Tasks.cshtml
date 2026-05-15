@@ -28,11 +28,12 @@
             {
                 <tr>
                     <td>@t.Id</td>
-                    <td>@(t.Type switch { TaskType.PhotoSingle => "📷 ○", TaskType.PhotoMultiple => "📷 ☑️", TaskType.PhotoFree => "📷 ✍️", TaskType.FormTask => "📝 Форма", _ => "—" })</td>
+                    <td>@(t.Type switch { TaskType.PhotoSingle => "📷 ○", TaskType.PhotoMultiple => "📷 ☑️", TaskType.PhotoFree => "📷 ✍️", TaskType.FormTask => "📝 Форма", TaskType.OrderTask => "📦 Заказ", _ => "—" })</td>
                     <td>@t.Title</td>
                     <td>@(t.TaskGroup?.Title ?? "—")</td>
                     <td>
                         <a href="/Admin/EditTask/@t.Id" class="btn btn-sm btn-warning" title="Редактировать">✏️</a>
+                        <a href="/Admin/PreviewTask/@t.Id" class="btn btn-sm btn-outline-info" title="Предпросмотр">👁️</a>
                         <form method="post" action="/Admin/DeleteTask/@t.Id" style="display:inline">
                             <button class="btn btn-sm btn-danger" onclick="return confirm('Удалить задание?')" title="Удалить">🗑️</button>
                         </form>

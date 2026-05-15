@@ -5,86 +5,192 @@
 }
 
 <style>
-    .option-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-    .option-row input[type="text"] { flex: 1; border-radius: 8px; }
-    .option-check { width: 20px; height: 20px; cursor: pointer; accent-color: #27ae60; }
-    .add-option-btn { cursor: pointer; color: #3498db; font-size: 0.9rem; }
-    .add-option-btn:hover { color: #2980b9; }
-    .remove-option { cursor: pointer; color: #e74c3c; font-size: 1.3rem; }
-    .card-task-type { border: 2px solid #e0e0e0; border-radius: 12px; padding: 20px; cursor: pointer; transition: all 0.2s; text-align: center; }
-    .card-task-type:hover { border-color: #3498db; }
-    .card-task-type.selected { border-color: #3498db; background: rgba(52,152,219,0.05); }
-    .card-task-type.disabled { opacity: 0.4; cursor: not-allowed; }
+    .order-topbar { background: var(--bg-card); border-radius: 10px; padding: 10px 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; border: 1px solid var(--border-color); font-size: 0.85rem; }
+    .order-id { font-size: 1.2rem; font-weight: 700; }
+    .copy-btn { cursor: pointer; font-size: 0.8rem; color: var(--link-color); background: none; border: none; padding: 0 3px; }
+    .order-date { font-size: 0.75rem; color: var(--text-muted); }
+    .counter { background: var(--border-color); padding: 3px 10px; border-radius: 15px; font-weight: 600; font-size: 0.8rem; }
+    .nav-btn { background: none; border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 10px; cursor: pointer; color: var(--text-primary); font-size: 0.8rem; }
+    .status-badge { padding: 4px 10px; border-radius: 15px; font-weight: 600; font-size: 0.78rem; }
+    .status-work { background: #fff3cd; color: #856404; }
+    .status-unpaid { background: #f8d7da; color: #721c24; }
+    .section-card { background: var(--bg-card); border-radius: 10px; padding: 14px; border: 1px solid var(--border-color); margin-bottom: 12px; }
+    .section-title { font-weight: 700; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-primary); border-bottom: 2px solid #3498db; padding-bottom: 6px; display: inline-block; }
+    .tabs { display: flex; }
+    .tab-btn { padding: 7px 16px; border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; color: var(--text-primary); font-size: 0.85rem; }
+    .tab-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+    .tab-btn:first-child { border-radius: 6px 0 0 6px; }
+    .tab-btn:last-child { border-radius: 0 6px 6px 0; }
+    .order-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .order-table th, .order-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: left; }
+    .order-table th { font-weight: 600; color: var(--text-muted); font-size: 0.75rem; }
+    .money-block { text-align: right; font-size: 0.85rem; }
+    .money-block div { margin-bottom: 3px; }
+    .money-total { font-size: 1.1rem; font-weight: 700; }
+    .btn-sm-sms { background: #27ae60; color: #fff; border: none; padding: 8px; border-radius: 6px; width: 100%; font-size: 0.8rem; cursor: pointer; margin-bottom: 6px; }
+    .btn-sm-email { background: #2980b9; color: #fff; border: none; padding: 8px; border-radius: 6px; width: 100%; font-size: 0.8rem; cursor: pointer; margin-bottom: 6px; }
+    .btn-sm-pay { background: #ecf0f1; color: #3498db; border: 1px solid #bdc3c7; padding: 8px; border-radius: 6px; width: 100%; font-size: 0.8rem; cursor: pointer; }
+    .form-label.small { font-size: 0.75rem; margin-bottom: 2px; }
+    .form-control-sm, .form-select-sm { font-size: 0.8rem; padding: 4px 8px; }
+    .field-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; flex-wrap: wrap; }
+    .mode-btn { width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; background: var(--bg-card); transition: all 0.2s; flex-shrink: 0; }
+    .mode-btn.show { background: #d5f5e3; border-color: #27ae60; }
+    .mode-btn.input { background: #fef5e7; border-color: #f39c12; }
+    .mode-btn.fix { background: #fadbd8; border-color: #e74c3c; }
+    .admin-value { width: 130px; display: none; font-size: 0.7rem; padding: 2px 6px; flex-shrink: 0; }
+    .admin-value.visible { display: inline-block; }
+    .legend-box { display: inline-block; width: 14px; height: 14px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .legend-green { background: #d5f5e3; border: 1px solid #27ae60; }
+    .legend-yellow { background: #fef5e7; border: 1px solid #f39c12; }
+    .legend-red { background: #fadbd8; border: 1px solid #e74c3c; }
+    .legend-toggle { cursor: pointer; color: #3498db; font-size: 0.8rem; }
 </style>
 
-<div class="container mt-4">
-    <h2>🔧 Новое задание</h2>
+<div class="container-fluid mt-4 px-3">
+    <h2>📦 Новое задание (Заказ)</h2>
+
+    <div class="mb-2"><span class="legend-toggle" onclick="toggleLegend()">📖 Как работают режимы?</span></div>
+    <div class="section-card" id="legendBox" style="display:none;">
+        <div class="d-flex gap-3 flex-wrap">
+            <span><span class="legend-box legend-green"></span> <strong>🟢</strong> — поле видно, правильный ответ не нужен</span>
+            <span><span class="legend-box legend-yellow"></span> <strong>🟡</strong> — поле пустое для пользователя, правильный ответ задаётся слева от кнопки</span>
+            <span><span class="legend-box legend-red"></span> <strong>🔴</strong> — поле с ошибкой (не редактируется), правильный ответ слева от кнопки</span>
+        </div>
+    </div>
 
     <form method="post" enctype="multipart/form-data" id="taskForm">
         <input type="hidden" name="AnswerJson" id="AnswerJson" />
         <input type="hidden" name="Content" id="ContentJson" />
-        <input type="hidden" name="Type" id="TaskType" />
-        <input type="hidden" name="ImageUrl" id="ImageUrl" />
+        <input type="hidden" name="Type" value="4" />
 
-        <div class="row mb-4">
-            <div class="col-md-3 mb-2"><div class="card-task-type" data-type="0" onclick="selectType(0,this)"><div style="font-size:2rem;">○</div><strong>Один ответ</strong></div></div>
-            <div class="col-md-3 mb-2"><div class="card-task-type" data-type="1" onclick="selectType(1,this)"><div style="font-size:2rem;">☑️</div><strong>Несколько</strong></div></div>
-            <div class="col-md-3 mb-2"><div class="card-task-type" data-type="2" onclick="selectType(2,this)"><div style="font-size:2rem;">✍️</div><strong>Свободный</strong></div></div>
-            <div class="col-md-3 mb-2"><div class="card-task-type disabled"><div style="font-size:2rem;">📝</div><strong>Форма</strong><p class="text-muted small mb-0">🚧 Техработы</p></div></div>
+        <div class="section-card">
+            <div class="section-title">📝 Основная информация</div>
+            <div class="mb-2"><label class="form-label small">Название задания</label><input type="text" name="Title" class="form-control form-control-sm" required /></div>
+            <div class="mb-2"><label class="form-label small">Описание</label><textarea name="Description" class="form-control form-control-sm" rows="2"></textarea></div>
+            <select name="TaskGroupId" class="form-select form-select-sm" required>
+            <option value="">Выберите группу...</option>
+            @if (ViewBag.TaskGroups != null)
+            {
+                foreach (var g in ViewBag.TaskGroups)
+                {
+                    <option value="@g.Id" selected="@(ViewBag.SelectedGroupId == g.Id)">@g.Title</option>
+                }
+            }
+        </select>        
         </div>
 
-        <div id="commonFields" style="display:none;">
-            <div class="mb-3"><label class="form-label">Название</label><input type="text" name="Title" class="form-control" required /></div>
-            <div class="mb-3"><label class="form-label">Описание (вопрос)</label><textarea name="Description" id="taskDescription" class="form-control" rows="2"></textarea></div>
-            <div class="mb-3"><label class="form-label">🖼️ Фото</label><input type="file" accept="image/*" class="form-control" onchange="uploadImage(this)" /><div id="preview" class="mt-2" style="display:none;"><img id="previewImg" class="img-fluid rounded" style="max-height:150px;" /></div></div>
-
-            <div id="singleOptions" style="display:none;">
-                <label class="form-label fw-bold text-primary">Варианты ответа</label>
-                <div id="singleOptionsContainer">
-                    <div class="option-row"><input type="radio" name="singleCorrect" class="option-check" checked /><input type="text" class="form-control option-text" placeholder="Правильный ответ" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div>
-                    <div class="option-row"><input type="radio" name="singleCorrect" class="option-check" /><input type="text" class="form-control option-text" placeholder="Неправильный ответ" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div>
-                </div>
-                <a class="add-option-btn" onclick="addSingleOption()">+ Добавить вариант</a>
-            </div>
-
-            <div id="multiOptions" style="display:none;">
-                <label class="form-label fw-bold text-primary">Варианты ответа</label>
-                <div id="multiOptionsContainer">
-                    <div class="option-row"><input type="checkbox" class="option-check multi-check" checked /><input type="text" class="form-control option-text" placeholder="Правильный ответ" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div>
-                    <div class="option-row"><input type="checkbox" class="option-check multi-check" /><input type="text" class="form-control option-text" placeholder="Неправильный ответ" required /><span class="remove-option" onclick="this.closest('.option-row').remove()">✕</span></div>
-                </div>
-                <a class="add-option-btn" onclick="addMultiOption()">+ Добавить вариант</a>
-            </div>
-
-            <div id="freeAnswer" style="display:none;">
-                <label class="form-label fw-bold text-primary">Ожидаемый ответ (подсказка)</label>
-                <textarea id="freeAnswerText" class="form-control" rows="3"></textarea>
-            </div>
-
-            <div class="mb-3 mt-3"><label class="form-label">📖 Пояснение</label><input type="text" name="Explanation" class="form-control" /></div>
-            <div class="mb-3"><label class="form-label">💡 Подсказка</label><input type="text" name="Hint" class="form-control" /></div>
-            <div class="mb-3"><label class="form-label">📁 Группа</label><select name="TaskGroupId" class="form-control"><option value="">Без группы</option>@if (ViewBag.TaskGroups != null) { foreach (var g in ViewBag.TaskGroups) { <option value="@g.Id">@g.Title</option> } }</select></div>
-
-            <button type="submit" class="btn btn-success btn-lg">💾 Сохранить</button>
+        <div class="order-topbar">
+            <div><span class="order-id">Заказ #299191</span><button type="button" class="copy-btn">📋</button><div class="order-date">12.12.2002 18:15:43</div></div>
+            <div class="counter">1 / 2</div>
+            <button type="button" class="nav-btn">◀</button><button type="button" class="nav-btn">▶</button>
+            <span class="status-badge status-unpaid">Не оплачено</span>
+            <span class="status-badge status-work">В работе</span>
+            <div style="flex:1;"></div>
+            <label style="font-size:0.8rem;"><input type="checkbox" /> Проведено</label>
+            <select class="form-select form-select-sm" style="width:auto;"><option>👤 Иванов Иван</option><option>👤 Петров Пётр</option><option>👤 Сидоров Сидор</option></select>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Изменён: Иванов Иван<br/>12.12.2002 18:15</div>
         </div>
-        <a href="/Admin/Tasks" class="btn btn-outline-secondary btn-lg mt-3">Отмена</a>
+
+        <div class="row g-2">
+            <div class="col-md-4">
+                <div class="section-card"><div class="section-title">📋 Основное</div>
+                    <div class="field-row" data-field="organization"><span class="form-label small" style="min-width:90px;">Организация</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>ООО Ромашка</option><option>ИП Иванов</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="contractor"><span class="form-label small" style="min-width:90px;">Контрагент</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>ИП Иванов</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="warehouse"><span class="form-label small" style="min-width:90px;">Склад</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>Основной</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="shipment_plan"><span class="form-label small" style="min-width:90px;">План отгрузки</span><input type="date" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="warehouse_project"><span class="form-label small" style="min-width:90px;">Проект склада</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>Проект А</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="cancel_reason"><span class="form-label small" style="min-width:90px;">Причина отмены</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>Отказ</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="section-card"><div class="section-title">👤 Клиент</div>
+                    <div class="field-row" data-field="client_name"><span class="form-label small" style="min-width:90px;">ФИО</span><input type="text" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="client_phone"><span class="form-label small" style="min-width:90px;">Телефон</span><input type="text" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="client_email"><span class="form-label small" style="min-width:90px;">Email</span><input type="email" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="d-flex flex-column gap-1 mt-2">
+                        <button type="button" class="btn-sm-sms">📱 Отправить СМС</button>
+                        <button type="button" class="btn-sm-email">📧 Отправить Email</button>
+                        <button type="button" class="btn-sm-pay">🔗 Ссылка на оплату</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="section-card"><div class="section-title">🚚 Доставка</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="field-row" data-field="courier"><span class="form-label small" style="min-width:70px;">Курьер</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>СДЭК</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="delivery_time"><span class="form-label small" style="min-width:70px;">Время</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>09-18</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="metro"><span class="form-label small" style="min-width:70px;">Метро</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>Курская</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="delivery_address"><span class="form-label small" style="min-width:70px;">Адрес</span><input type="text" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="shipment_comment"><span class="form-label small" style="min-width:70px;">Коммент.</span><textarea class="form-control form-control-sm field-value" style="flex:1;" rows="1"></textarea><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="field-row" data-field="requisites"><span class="form-label small" style="min-width:70px;">Реквиз.</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>Счёт №1</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="country"><span class="form-label small" style="min-width:70px;">Страна</span><select class="form-select form-select-sm field-value" style="flex:1;"><option value="">—</option><option>Россия</option></select><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="dalli_act"><span class="form-label small" style="min-width:70px;">Акт</span><input type="text" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="delivery_days"><span class="form-label small" style="min-width:70px;">Дней</span><input type="text" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="track_number"><span class="form-label small" style="min-width:70px;">Трек</span><input type="number" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                            <div class="field-row" data-field="plan_delivery_date"><span class="form-label small" style="min-width:70px;">Дата</span><input type="date" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-2">
+            <div class="col-md-8"><div class="section-card" style="min-height:110px;"><div class="section-title">🔗 Интеграция СДЭК</div><p class="text-muted small mb-0">🚧 Технические работы</p></div></div>
+            <div class="col-md-4">
+                <div class="section-card"><div class="section-title">💰 Деньги</div>
+                    <div class="field-row" data-field="payment_link"><span class="form-label small" style="min-width:80px;">Ссылка</span><input type="text" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                    <div class="field-row" data-field="promo_code"><span class="form-label small" style="min-width:80px;">Промокод</span><input type="text" class="form-control form-control-sm field-value" style="flex:1;" /><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-2"><div class="tabs"><button type="button" class="tab-btn active">📦 Товары</button><button type="button" class="tab-btn">📄 Документы</button></div><button type="button" class="btn btn-outline-secondary btn-sm">⚙️</button></div>
+            <table class="order-table"><thead><tr><th><input type="checkbox" /></th><th>Фото</th><th>Название</th><th>Кол-во</th><th>Резерв</th><th>Отгруж.</th><th>Доступ.</th><th>Остат.</th><th>Цена</th><th>Скидка</th><th>Сумма</th><th></th></tr></thead><tbody><tr><td><input type="checkbox" /></td><td>🖼️</td><td>Товар 1</td><td>2</td><td><span class="badge bg-success">Зарезерв.</span></td><td>0</td><td>10</td><td>8</td><td>1500 ₽</td><td>5%</td><td>2850 ₽</td><td><button type="button" class="btn btn-sm btn-outline-secondary">⋯</button></td></tr></tbody></table>
+            <div class="mt-2"><input type="text" class="form-control form-control-sm" placeholder="🔍 Поиск товаров..." /></div>
+        </div>
+
+        <div class="section-card">
+            <div class="row">
+                <div class="col-md-6"><div class="field-row" data-field="order_comment"><span class="form-label small" style="min-width:120px;">Комментарии к заказу</span><textarea class="form-control form-control-sm field-value" style="flex:1;" rows="2"></textarea><input type="text" class="form-control form-control-sm admin-value" placeholder="Правильный ответ" /><button type="button" class="mode-btn show" onclick="cycleMode(this)">🟢</button></div></div>
+                <div class="col-md-6 money-block"><div>Промежуточный итог: <strong>0 ₽</strong></div><div>Доставка: <strong>0 ₽</strong></div><div class="money-total">Итого: <strong>0 ₽</strong></div><div class="mt-2">Количество: <strong>1 товар</strong></div></div>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success btn-lg">💾 Сохранить задание</button>
+        <a href="/Admin/Tasks" class="btn btn-outline-secondary btn-lg">Отмена</a>
     </form>
 </div>
 
 @section Scripts {
     <script>
-        var selectedType = null;
-        function selectType(t, el) { document.querySelectorAll('.card-task-type:not(.disabled)').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); selectedType = t; document.getElementById('TaskType').value = t; document.getElementById('commonFields').style.display = 'block'; ['singleOptions','multiOptions','freeAnswer'].forEach(id => document.getElementById(id).style.display = 'none'); if (t === 0) document.getElementById('singleOptions').style.display = 'block'; else if (t === 1) document.getElementById('multiOptions').style.display = 'block'; else if (t === 2) document.getElementById('freeAnswer').style.display = 'block'; }
-        function addSingleOption() { var d = document.createElement('div'); d.className = 'option-row'; d.innerHTML = '<input type="radio" name="singleCorrect" class="option-check" /><input type="text" class="form-control option-text" placeholder="Вариант" required /><span class="remove-option" onclick="this.closest(\'.option-row\').remove()">✕</span>'; document.getElementById('singleOptionsContainer').appendChild(d); }
-        function addMultiOption() { var d = document.createElement('div'); d.className = 'option-row'; d.innerHTML = '<input type="checkbox" class="option-check multi-check" /><input type="text" class="form-control option-text" placeholder="Вариант" required /><span class="remove-option" onclick="this.closest(\'.option-row\').remove()">✕</span>'; document.getElementById('multiOptionsContainer').appendChild(d); }
-        document.getElementById('taskForm').addEventListener('submit', function(e) {
-            if (selectedType === 3) { alert('Форма временно недоступна'); e.preventDefault(); return; }
-            var desc = document.getElementById('taskDescription').value, answerJson = '';
-            if (selectedType === 0) { var texts = document.querySelectorAll('#singleOptionsContainer .option-text'), checks = document.querySelectorAll('#singleOptionsContainer .option-check'), opts = [], ci = 0; texts.forEach((t, i) => { if (t.value.trim()) { if (checks[i].checked) ci = opts.length; opts.push(t.value.trim()); } }); document.getElementById('ContentJson').value = desc + '|' + opts[ci]; answerJson = opts.join('|'); }
-            else if (selectedType === 1) { var texts = document.querySelectorAll('#multiOptionsContainer .option-text'), checks = document.querySelectorAll('#multiOptionsContainer .multi-check'), opts = [], cis = []; texts.forEach((t, i) => { if (t.value.trim()) { if (checks[i].checked) cis.push(opts.length); opts.push(t.value.trim()); } }); document.getElementById('ContentJson').value = desc + '|' + cis.map(i => opts[i]).join('|'); answerJson = opts.join('|'); }
-            else if (selectedType === 2) { document.getElementById('ContentJson').value = desc; answerJson = document.getElementById('freeAnswerText').value; }
-            document.getElementById('AnswerJson').value = answerJson;
+        function toggleLegend() { var b = document.getElementById('legendBox'); b.style.display = b.style.display === 'none' ? 'block' : 'none'; }
+        function cycleMode(btn) {
+            var modes = ['show', 'input', 'fix'], icons = ['🟢', '🟡', '🔴'];
+            var cur = modes.indexOf(btn.classList.contains('show') ? 'show' : btn.classList.contains('input') ? 'input' : 'fix');
+            var next = (cur + 1) % 3;
+            btn.className = 'mode-btn ' + modes[next]; btn.textContent = icons[next];
+            var row = btn.closest('.field-row');
+            var adminVal = row.querySelector('.admin-value');
+            var field = row.querySelector('.field-value');
+            if (next === 0) { adminVal.classList.remove('visible'); field.disabled = false; field.style.opacity = '1'; }
+            else if (next === 1) { adminVal.classList.add('visible'); field.disabled = false; field.style.opacity = '1'; field.value = ''; }
+            else { adminVal.classList.add('visible'); field.disabled = true; field.style.opacity = '0.7'; }
+        }
+        document.getElementById('taskForm').addEventListener('submit', function() {
+            var fields = [];
+            document.querySelectorAll('.field-row').forEach(row => {
+                var btn = row.querySelector('.mode-btn');
+                var mode = btn.classList.contains('show') ? 'show' : btn.classList.contains('input') ? 'input' : 'fix';
+                var value = row.querySelector('.field-value').value;
+                var correct = row.querySelector('.admin-value').value;
+                fields.push({ key: row.dataset.field, mode: mode, value: value, correct: correct });
+            });
+            document.getElementById('AnswerJson').value = JSON.stringify(fields);
+            document.getElementById('ContentJson').value = document.querySelector('[name="Description"]').value;
         });
-        function uploadImage(input) { var file = input.files[0]; if (!file) return; var fd = new FormData(); fd.append('image', file); fetch('/Admin/UploadImage', { method: 'POST', body: fd }).then(r => r.json()).then(d => { if (d.success) { document.getElementById('ImageUrl').value = d.url; document.getElementById('previewImg').src = d.url; document.getElementById('preview').style.display = 'block'; } else alert(d.error); }); }
+        function uploadImage(input) { var f = input.files[0]; if (!f) return; var fd = new FormData(); fd.append('image', f); fetch('/Admin/UploadImage', { method: 'POST', body: fd }).then(r => r.json()).then(d => { if (d.success) { document.getElementById('ImageUrl').value = d.url; document.getElementById('previewImg').src = d.url; document.getElementById('preview').style.display = 'block'; } else alert(d.error); }); }
     </script>
 }

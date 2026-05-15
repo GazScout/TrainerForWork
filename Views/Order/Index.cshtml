@@ -1,0 +1,215 @@
+@{
+    ViewData["Title"] = ViewBag.TaskTitle ?? "Заказ";
+    var isPreview = ViewBag.IsPreview as bool? ?? false;
+    var fields = ViewBag.Fields as List<EmployeeTrainer.Models.OrderField> ?? new();
+}
+
+<style>
+    .order-topbar { background: var(--bg-card); border-radius: 10px; padding: 10px 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; flex-wrap: wrap; border: 1px solid var(--border-color); font-size: 0.85rem; }
+    .order-id { font-size: 1.2rem; font-weight: 700; }
+    .copy-btn { cursor: pointer; font-size: 0.8rem; color: var(--link-color); background: none; border: none; padding: 0 3px; }
+    .order-date { font-size: 0.75rem; color: var(--text-muted); }
+    .counter { background: var(--border-color); padding: 3px 10px; border-radius: 15px; font-weight: 600; font-size: 0.8rem; }
+    .nav-btn { background: none; border: 1px solid var(--border-color); border-radius: 6px; padding: 4px 10px; cursor: pointer; color: var(--text-primary); font-size: 0.8rem; }
+    .status-badge { padding: 4px 10px; border-radius: 15px; font-weight: 600; font-size: 0.78rem; }
+    .status-work { background: #fff3cd; color: #856404; }
+    .status-unpaid { background: #f8d7da; color: #721c24; }
+    .section-card { background: var(--bg-card); border-radius: 10px; padding: 14px; border: 1px solid var(--border-color); margin-bottom: 12px; }
+    .section-title { font-weight: 700; margin-bottom: 10px; font-size: 0.9rem; color: var(--text-primary); border-bottom: 2px solid #3498db; padding-bottom: 6px; display: inline-block; }
+    .tabs { display: flex; }
+    .tab-btn { padding: 7px 16px; border: 1px solid var(--border-color); background: var(--bg-card); cursor: pointer; color: var(--text-primary); font-size: 0.85rem; }
+    .tab-btn.active { background: #3498db; color: #fff; border-color: #3498db; }
+    .tab-btn:first-child { border-radius: 6px 0 0 6px; }
+    .tab-btn:last-child { border-radius: 0 6px 6px 0; }
+    .order-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    .order-table th, .order-table td { padding: 6px 8px; border-bottom: 1px solid var(--border-color); text-align: left; }
+    .order-table th { font-weight: 600; color: var(--text-muted); font-size: 0.75rem; }
+    .money-block { text-align: right; font-size: 0.85rem; }
+    .money-block div { margin-bottom: 3px; }
+    .money-total { font-size: 1.1rem; font-weight: 700; }
+    .btn-sm-sms { background: #27ae60; color: #fff; border: none; padding: 8px; border-radius: 6px; width: 100%; font-size: 0.8rem; cursor: pointer; margin-bottom: 6px; }
+    .btn-sm-email { background: #2980b9; color: #fff; border: none; padding: 8px; border-radius: 6px; width: 100%; font-size: 0.8rem; cursor: pointer; margin-bottom: 6px; }
+    .btn-sm-pay { background: #ecf0f1; color: #3498db; border: 1px solid #bdc3c7; padding: 8px; border-radius: 6px; width: 100%; font-size: 0.8rem; cursor: pointer; }
+    .form-label.small { font-size: 0.75rem; margin-bottom: 2px; }
+    .form-control-sm, .form-select-sm { font-size: 0.8rem; padding: 4px 8px; }
+    .fix-highlight { background-color: rgba(231,76,60,0.08); border-color: #e74c3c; }
+</style>
+
+<div class="container-fluid mt-4 px-3">
+    @if (isPreview)
+    {
+        <div class="alert alert-warning">👁️ Режим предпросмотра — так задание увидит сотрудник</div>
+    }
+
+    <h2>📦 @ViewBag.TaskTitle</h2>
+    @if (!string.IsNullOrEmpty(ViewBag.TaskDescription as string))
+    {
+        <p class="text-muted">@ViewBag.TaskDescription</p>
+    }
+
+    <form method="post" id="orderForm">
+        <!-- Верхняя панель -->
+        <div class="order-topbar">
+            <div><span class="order-id">Заказ #299191</span><button type="button" class="copy-btn">📋</button><div class="order-date">12.12.2002 18:15:43</div></div>
+            <div class="counter">1 / 2</div>
+            <button type="button" class="nav-btn">◀</button><button type="button" class="nav-btn">▶</button>
+            <span class="status-badge status-unpaid">@GetFieldValue("payment_status", "Не оплачено")</span>
+            <span class="status-badge status-work">@GetFieldValue("work_status", "В работе")</span>
+            <div style="flex:1;"></div>
+            <label style="font-size:0.8rem;"><input type="checkbox" @(isPreview ? "disabled" : "") /> Проведено</label>
+            <select class="form-select form-select-sm" style="width:auto;" @(isPreview ? "disabled" : "")><option>👤 Иванов Иван</option></select>
+            <div style="font-size:0.75rem;color:var(--text-muted);">Изменён: Иванов Иван<br/>12.12.2002 18:15</div>
+        </div>
+
+        <!-- Основное / Клиент / Доставка -->
+        <div class="row g-2">
+            <div class="col-md-4">
+                <div class="section-card">
+                    <div class="section-title">📋 Основное</div>
+                    @RenderField("organization", "Организация", "select", "ООО Ромашка|ИП Иванов|ЗАО Берёзка")
+                    @RenderField("contractor", "Контрагент", "select", "ИП Иванов|ООО Поставщик")
+                    @RenderField("warehouse", "Склад", "select", "Основной склад|Резервный склад")
+                    @RenderField("shipment_plan", "План отгрузки", "date", "")
+                    @RenderField("warehouse_project", "Проект склада", "select", "Проект А|Проект Б")
+                    @RenderField("cancel_reason", "Причина отмены", "select", "—|Отказ клиента|Нет товара")
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="section-card">
+                    <div class="section-title">👤 Клиент</div>
+                    @RenderField("client_name", "ФИО клиента", "text", "")
+                    @RenderField("client_phone", "Телефон", "text", "")
+                    @RenderField("client_email", "Email", "text", "")
+                    <div class="d-flex flex-column gap-1 mt-2">
+                        <button type="button" class="btn-sm-sms" @(isPreview ? "disabled" : "")>📱 Отправить СМС</button>
+                        <button type="button" class="btn-sm-email" @(isPreview ? "disabled" : "")>📧 Отправить Email</button>
+                        <button type="button" class="btn-sm-pay" @(isPreview ? "disabled" : "")>🔗 Ссылка на оплату</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="section-card">
+                    <div class="section-title">🚚 Доставка</div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            @RenderField("courier", "Курьер", "select", "СДЭК|Почта России|Курьерская служба")
+                            @RenderField("delivery_time", "Время доставки", "select", "09:00-18:00|10:00-14:00|14:00-18:00")
+                            @RenderField("metro", "Метро", "select", "Курская|Арбатская|Тверская")
+                            @RenderField("delivery_address", "Адрес доставки", "text", "")
+                            @RenderField("shipment_comment", "Комментарий к отгрузке", "textarea", "")
+                        </div>
+                        <div class="col-md-6">
+                            @RenderField("requisites", "Реквизиты", "select", "—|Счёт №1|Счёт №2")
+                            @RenderField("country", "Страна", "select", "Россия|Беларусь|Казахстан")
+                            @RenderField("dalli_act", "Акт ДАЛЛИ", "text", "")
+                            @RenderField("delivery_days", "Дней доставки", "text", "")
+                            @RenderField("track_number", "Трек номер", "number", "")
+                            @RenderField("plan_delivery_date", "План. дата доставки", "date", "")
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Интеграция + Деньги -->
+        <div class="row g-2">
+            <div class="col-md-8"><div class="section-card" style="min-height:110px;"><div class="section-title">🔗 Интеграция СДЭК</div><p class="text-muted small mb-0">🚧 Технические работы</p></div></div>
+            <div class="col-md-4">
+                <div class="section-card">
+                    <div class="section-title">💰 Деньги</div>
+                    @RenderField("payment_link", "Ссылка на оплату", "text", "")
+                    @RenderField("promo_code", "Промокод", "text", "")
+                </div>
+            </div>
+        </div>
+
+        <!-- Товары -->
+        <div class="section-card">
+            <div class="d-flex justify-content-between align-items-center mb-2"><div class="tabs"><button type="button" class="tab-btn active">📦 Товары</button><button type="button" class="tab-btn">📄 Документы</button></div><button type="button" class="btn btn-outline-secondary btn-sm" @(isPreview ? "disabled" : "")>⚙️</button></div>
+            <table class="order-table"><thead><tr><th><input type="checkbox" @(isPreview ? "disabled" : "") /></th><th>Фото</th><th>Название</th><th>Кол-во</th><th>Резерв</th><th>Отгруж.</th><th>Доступ.</th><th>Остат.</th><th>Цена</th><th>Скидка</th><th>Сумма</th><th></th></tr></thead><tbody><tr><td><input type="checkbox" @(isPreview ? "disabled" : "") /></td><td>🖼️</td><td>Товар 1</td><td>2</td><td><span class="badge bg-success">Зарезерв.</span></td><td>0</td><td>10</td><td>8</td><td>1500 ₽</td><td>5%</td><td>2850 ₽</td><td><button type="button" class="btn btn-sm btn-outline-secondary" @(isPreview ? "disabled" : "")>⋯</button></td></tr></tbody></table>
+            <div class="mt-2"><input type="text" class="form-control form-control-sm" placeholder="🔍 Поиск товаров..." @(isPreview ? "disabled" : "") /></div>
+        </div>
+
+        <!-- Итого -->
+        <div class="section-card">
+            <div class="row">
+                <div class="col-md-6">
+                    @RenderField("order_comment", "Комментарии к заказу", "textarea", "")
+                </div>
+                <div class="col-md-6 money-block"><div>Промежуточный итог: <strong>0 ₽</strong></div><div>Доставка: <strong>0 ₽</strong></div><div class="money-total">Итого: <strong>0 ₽</strong></div><div class="mt-2">Количество: <strong>1 товар</strong></div></div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@functions {
+    string GetFieldValue(string key, string defaultValue)
+    {
+        var fields = ViewBag.Fields as List<EmployeeTrainer.Models.OrderField> ?? new();
+        var field = fields.FirstOrDefault(f => f.FieldKey == key);
+        return field?.Value ?? defaultValue;
+    }
+
+    dynamic GetField(string key)
+{
+    var fields = ViewBag.Fields as List<EmployeeTrainer.Models.OrderField> ?? new();
+    return fields.FirstOrDefault(f => f.FieldKey == key)!;
+}
+
+    Microsoft.AspNetCore.Html.IHtmlContent RenderField(string key, string label, string type, string options)
+    {
+        var fields = ViewBag.Fields as List<EmployeeTrainer.Models.OrderField> ?? new();
+        var isPreview = ViewBag.IsPreview as bool? ?? false;
+        var field = fields.FirstOrDefault(f => f.FieldKey == key);
+        var mode = field?.Mode ?? "show";
+        var value = field?.Value ?? "";
+
+        if (mode == "show")
+        {
+            if (type == "select")
+            {
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><select class=\"form-select form-select-sm\" disabled><option>{value}</option></select></div>");
+            }
+            else if (type == "textarea")
+            {
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><textarea class=\"form-control form-control-sm\" rows=\"1\" disabled>{value}</textarea></div>");
+            }
+            else
+            {
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><input type=\"{type}\" class=\"form-control form-control-sm\" value=\"{value}\" disabled /></div>");
+            }
+        }
+        else if (mode == "input")
+        {
+            if (type == "select")
+            {
+                var opts = string.Join("", options.Split('|').Select(o => $"<option>{o}</option>"));
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><select class=\"form-select form-select-sm\" {(isPreview ? "disabled" : "")}><option value=\"\">—</option>{opts}</select></div>");
+            }
+            else if (type == "textarea")
+            {
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><textarea class=\"form-control form-control-sm\" rows=\"1\" placeholder=\"Введите значение...\" {(isPreview ? "disabled" : "")}></textarea></div>");
+            }
+            else
+            {
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><input type=\"{type}\" class=\"form-control form-control-sm\" placeholder=\"Введите значение...\" {(isPreview ? "disabled" : "")} /></div>");
+            }
+        }
+        else // fix
+        {
+            if (type == "select")
+            {
+                var opts = string.Join("", options.Split('|').Select(o => $"<option>{(o == value ? o : o)}</option>"));
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><select class=\"form-select form-select-sm fix-highlight\" {(isPreview ? "disabled" : "")}><option>{value}</option></select><small class=\"text-danger\">Найдите и исправьте ошибку</small></div>");
+            }
+            else if (type == "textarea")
+            {
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><textarea class=\"form-control form-control-sm fix-highlight\" rows=\"1\" {(isPreview ? "disabled" : "")}>{value}</textarea><small class=\"text-danger\">Найдите и исправьте ошибку</small></div>");
+            }
+            else
+            {
+                return Html.Raw($"<div class=\"mb-2\"><label class=\"form-label small\">{label}</label><input type=\"{type}\" class=\"form-control form-control-sm fix-highlight\" value=\"{value}\" {(isPreview ? "disabled" : "")} /><small class=\"text-danger\">Найдите и исправьте ошибку</small></div>");
+            }
+        }
+    }
+}
